@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/* 1. Cấu hình các file để Tailwind quét class */
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.vue'; /* 👉 QUAN TRỌNG: Mình đã thêm dòng này để nó hiểu file Vue */
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* 2. Phần Style tùy chỉnh giống trong Video của Jon */
+@layer components {
+    /* Style cho tiêu đề lớn */
+    .title {
+        @apply text-center text-3xl font-bold mb-10;
+    }
+
+    /* Style cho các link trên menu */
+    .nav-link {
+        @apply text-black hover:bg-slate-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium;
+    }
+
+    /* Style cho Label (Nhãn) của Form */
+    label {
+        @apply block mb-2 text-sm font-medium text-gray-900;
+    }
+
+    /* Style cho Input (Ô nhập liệu) */
+    input {
+        @apply bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5;
+    }
+
+    /* Style cho Button (Nút bấm) */
+    .primary-btn {
+        @apply text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center;
+    }
+
+    /* Style cho Text Link (Link chữ nhỏ) */
+    .text-link {
+        @apply font-medium text-blue-600 hover:underline;
+    }
+}
