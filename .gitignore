@@ -1,24 +1,38 @@
-*.log
-.DS_Store
+# Bỏ qua thư viện tải về (Rất nặng)
+/node_modules
+/vendor
+
+# Bỏ qua các file môi trường & bảo mật
 .env
 .env.backup
 .env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
 /auth.json
-/node_modules
+/storage/*.key
+
+# Bỏ qua các file Build của Vite (Vue.js) và Cache
 /public/build
 /public/hot
 /public/storage
-/storage/*.key
 /storage/pail
-/vendor
+.phpunit.result.cache
+/.phpunit.cache
+
+# Bỏ qua file log
+*.log
+npm-debug.log
+yarn-error.log
+
+# Bỏ qua cấu hình hệ điều hành & IDE (Code Editor)
+.DS_Store
+Thumbs.db
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+.phpactor.json
+
+# Bỏ qua máy ảo (nếu có dùng)
 Homestead.json
 Homestead.yaml
-Thumbs.db
+/.vagrant
