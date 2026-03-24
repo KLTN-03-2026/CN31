@@ -72,7 +72,7 @@ const submit = () => {
 
                 <!-- Name field -->
                 <div class="form-field">
-                    <label for="name" class="form-label">Họ tên</label>
+
                     <TextInput
                         id="name"
                         name="Họ tên"
@@ -84,7 +84,7 @@ const submit = () => {
 
                 <!-- Email field -->
                 <div class="form-field">
-                    <label for="email" class="form-label">Email</label>
+
                     <TextInput
                         id="email"
                         name="Email"
@@ -97,7 +97,7 @@ const submit = () => {
 
                 <!-- Password field -->
                 <div class="form-field">
-                    <label for="password" class="form-label">Mật khẩu</label>
+
                     <TextInput
                         id="password"
                         name="Mật khẩu"
@@ -110,7 +110,6 @@ const submit = () => {
 
                 <!-- Confirm Password field -->
                 <div class="form-field">
-                    <label for="password_confirmation" class="form-label">Nhập lại mật khẩu</label>
                     <TextInput
                         id="password_confirmation"
                         name="Nhập lại mật khẩu"

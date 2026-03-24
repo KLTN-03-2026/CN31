@@ -1,53 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Phiếu Yêu Cầu {{ $phieu->ma_phieu }}</title>
+    <title>Phiếu Yêu Cầu Mua Sắm {{ $phieu->ma_phieu }}</title>
     <style>
-        /* Font chữ DejaVu Sans hỗ trợ tiếng Việt trong DOMPDF */
-        body { font-family: DejaVu Sans, sans-serif; font-size: 13px; line-height: 1.5; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #444; padding-bottom: 10px; }
-        .header h1 { margin: 0; color: #2563eb; text-transform: uppercase; }
-        .meta-info { margin-bottom: 20px; }
-        .meta-info p { margin: 5px 0; }
+        /* BẮT BUỘC dùng DejaVu Sans để không bị lỗi font Tiếng Việt */
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 13px; line-height: 1.5; color: #333; }
+        .header { width: 100%; margin-bottom: 30px; }
+        .company-info { float: left; width: 40%; text-align: center; font-weight: bold; }
+        .quoc-hieu { float: right; width: 60%; text-align: center; font-weight: bold; }
+        .clear { clear: both; }
+        .line { border-top: 1px solid #000; width: 150px; margin: 5px auto; }
 
-        /* Bảng hàng hóa */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { background-color: #f3f4f6; border: 1px solid #9ca3af; padding: 10px; text-align: center; font-weight: bold; }
-        td { border: 1px solid #9ca3af; padding: 8px; }
-        .text-right { text-align: right; }
+        h1 { text-align: center; font-size: 20px; text-transform: uppercase; margin-top: 20px; margin-bottom: 20px; }
+
+        .info-section { margin-bottom: 20px; }
+        .info-section p { margin: 5px 0; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 30px; }
+        th, td { border: 1px solid #000; padding: 8px; }
+        th { background-color: #f2f2f2; text-align: center; }
         .text-center { text-align: center; }
-        .bold { font-weight: bold; }
+        .text-right { text-align: right; }
+        .text-bold { font-weight: bold; }
 
-        /* Phần chữ ký */
-        .signatures { margin-top: 50px; display: table; width: 100%; }
-        .sign-box { display: table-cell; text-align: center; width: 33%; vertical-align: top; }
-        .sign-box h4 { margin-bottom: 5px; }
-        .sign-box i { color: #555; font-size: 11px; }
+        .footer-signatures { width: 100%; margin-top: 30px; }
+        .signature-col { float: left; width: 25%; text-align: center; font-weight: bold; }
+        .signature-col small { font-weight: normal; font-style: italic; color: #555; }
+        .signature-space { height: 80px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>PHIẾU YÊU CẦU MUA SẮM</h1>
-        <p>Mã phiếu: <strong>{{ $phieu->ma_phieu }}</strong></p>
+        <div class="company-info">
+            CÔNG TY PROCUREFLOW<br>
+            Số: {{ $phieu->ma_phieu }}
+            <div class="line"></div>
+        </div>
+        <div class="quoc-hieu">
+            CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br>
+            Độc lập - Tự do - Hạnh phúc
+            <div class="line"></div>
+        </div>
+        <div class="clear"></div>
     </div>
 
-    <div class="meta-info">
-        <p><strong>Người đề xuất:</strong> {{ $phieu->nguoiTao->name }}</p>
-        <p><strong>Phòng ban:</strong> {{ $phieu->phongBan->ten_phong ?? 'Chưa cập nhật' }}</p>
-        <p><strong>Ngày tạo:</strong> {{ $phieu->created_at->format('d/m/Y H:i') }}</p>
-        <p><strong>Trạng thái hiện tại:</strong> {{ $phieu->trang_thai->label() }}</p>
-        <p><strong>Lý do mua sắm:</strong> <em>{{ $phieu->ly_do }}</em></p>
+    <h1>TỜ TRÌNH YÊU CẦU MUA SẮM</h1>
+
+    <div class="info-section">
+        <p><span class="text-bold">1. Kính gửi:</span> Ban Giám Đốc, Phòng Kế Toán</p>
+        <p><span class="text-bold">2. Người đề nghị:</span> {{ $phieu->nguoiTao->name }}</p>
+        <p><span class="text-bold">3. Phòng ban:</span> {{ $phieu->phongBan->ten_phong_ban ?? 'Chưa cập nhật' }}</p>
+        <p><span class="text-bold">4. Tiêu đề:</span> {{ $phieu->tieu_de }}</p>
+        <p><span class="text-bold">5. Lý do mua sắm:</span> {{ $phieu->ly_do ?: 'Không có ghi chú' }}</p>
     </div>
 
     <table>
         <thead>
             <tr>
                 <th width="5%">STT</th>
-                <th>Tên Sản Phẩm</th>
+                <th width="40%">Tên hàng hóa / Dịch vụ</th>
                 <th width="10%">SL</th>
-                <th width="15%">Đơn Giá</th>
-                <th width="20%">Thành Tiền</th>
+                <th width="20%">Đơn giá (VNĐ)</th>
+                <th width="25%">Thành tiền (VNĐ)</th>
             </tr>
         </thead>
         <tbody>
@@ -57,33 +72,40 @@
                 <td>{{ $item->ten_san_pham }}</td>
                 <td class="text-center">{{ $item->so_luong }}</td>
                 <td class="text-right">{{ number_format($item->don_gia, 0, ',', '.') }}</td>
-                <td class="text-right bold">{{ number_format($item->thanh_tien, 0, ',', '.') }}</td>
+                <td class="text-right text-bold">{{ number_format($item->thanh_tien, 0, ',', '.') }}</td>
             </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="4" class="text-right bold" style="background-color: #f9fafb;">TỔNG CỘNG:</td>
-                <td class="text-right bold" style="color: #dc2626; font-size: 14px;">{{ number_format($phieu->tong_tien, 0, ',', '.') }} VND</td>
+                <td colspan="4" class="text-right text-bold uppercase">Tổng thanh toán:</td>
+                <td class="text-right text-bold" style="font-size: 15px; color: #d9534f;">
+                    {{ number_format($phieu->tong_tien, 0, ',', '.') }}
+                </td>
             </tr>
         </tfoot>
     </table>
 
-    <div class="signatures">
-        <div class="sign-box">
-            <h4>Người Lập Phiếu</h4>
-            <i>(Ký và ghi rõ họ tên)</i>
-            <br><br><br><br>
-            <strong>{{ $phieu->nguoiTao->name }}</strong>
+    <div class="footer-signatures">
+        <div class="signature-col">
+            Người lập phiếu<br>
+            <small>(Ký, ghi rõ họ tên)</small>
+            <div class="signature-space"></div>
+            {{ $phieu->nguoiTao->name }}
         </div>
-        <div class="sign-box">
-            <h4>Trưởng Phòng</h4>
-            <i>(Duyệt và ký tên)</i>
+        <div class="signature-col">
+            Trưởng phòng<br>
+            <small>(Ký, ghi rõ họ tên)</small>
         </div>
-        <div class="sign-box">
-            <h4>Giám Đốc / Kế Toán</h4>
-            <i>(Xác nhận cuối cùng)</i>
+        <div class="signature-col">
+            Kế toán<br>
+            <small>(Ký, ghi rõ họ tên)</small>
         </div>
+        <div class="signature-col">
+            Giám đốc<br>
+            <small>(Ký, đóng dấu)</small>
+        </div>
+        <div class="clear"></div>
     </div>
 </body>
 </html>

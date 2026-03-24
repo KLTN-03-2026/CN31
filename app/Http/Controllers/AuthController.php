@@ -3,69 +3,74 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpKernel\HttpCache\Store;
 
 class AuthController extends Controller
 {
-    public function Register(Request $request)
+    // Đổi tên thành chữ thường: register
+    public function register(Request $request): RedirectResponse
     {
-        // 1. Validate
+        // 1. Validate chặt chẽ
         $fields = $request->validate([
-            'avatar'   => ['file', 'nullable', 'max:30000'],
-            'name'     => ['required', 'max:255'],
-            'email'    => ['required', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', 'min:3'],
-        ]);
+            'avatar'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,avif', 'max:5048'],
+            'name'          => ['required', 'string', 'max:255'],
+            'email'         => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password'      => ['required', 'confirmed', 'min:8'],
+            'phong_ban_id'  => ['required', 'exists:phong_ban,id']
+             ]);
 
-        // 2. Upload & TRÁO ĐỔI dữ liệu
+        // 2. Upload Avatar (Tối ưu dùng $request->file thay vì $request->avatar)
         if ($request->hasFile('avatar')) {
-            //  Dòng này sửa lỗi lưu đường dẫn tạm C:\tmp của bạn lúc nãy
-            $fields['avatar'] = Storage::disk('public')->put('avatars', $request->avatar);
+            $fields['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
 
-        // 3. Tạo User
-        $user = User::create($fields); // Lúc này $fields['avatar'] đã là đường dẫn chuẩn
+        // 3. Tạo User (Mật khẩu tự động được mã hóa nhờ Model casts 'hashed')
+        $user = User::create($fields);
 
-        // 4. Login
+        // 4. Đăng nhập ngay sau khi tạo
         Auth::login($user);
-        return redirect()->route('dashboard');
+
+        // Tối ưu: Dùng to_route() ngắn gọn hơn redirect()->route()
+        return to_route('dashboard')->with('success', 'Đăng ký tài khoản thành công!');
     }
 
-    public function Login(Request $request): RedirectResponse
+    // Đổi tên thành chữ thường: login
+    public function login(Request $request): RedirectResponse
     {
-        $fields = $request->validate([
+        $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required']
         ]);
-        $user = Auth::attempt($fields, $request->remember);
 
-        if ($user) {
+        // Tối ưu: Ép kiểu boolean cho nút Remember Me an toàn hơn
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            // Chống tấn công Session Fixation
             $request->session()->regenerate();
-            return redirect()->intended('dashboard');
-            // return redirect()->route('home');
+
+            // intended() giúp chuyển hướng về trang cũ nếu trước đó user bị văng ra
+            return redirect()->intended(route('dashboard'))
+                             ->with('success', 'Chào mừng bạn quay lại hệ thống!');
         }
+
+        // UX: Trả về lỗi kèm theo email đã nhập để user không phải gõ lại
         return back()->withErrors([
-            'password' => 'email hoặc mật khẩu không chinh xac',
-        ])->onlyInput();
+            'password' => 'Email hoặc mật khẩu không chính xác.',
+        ])->onlyInput('email');
     }
 
-    // Logout
-    public function Logout(Request $request)
+    // Đổi tên thành chữ thường: logout
+    public function logout(Request $request): RedirectResponse
     {
-        Auth::guard('web')->logout();
+        // Chỉ cần 1 dòng này là đủ cho guard mặc định
         Auth::logout();
+
+        // Xóa sạch session và token
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        // chuyển trang
-        return redirect()->route('login');
+
+        return to_route('login')->with('success', 'Bạn đã đăng xuất an toàn.');
     }
-
-
 }

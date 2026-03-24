@@ -1,59 +1,35 @@
 <?php
-
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Enums\VaiTro;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
-{
+class User extends Authenticatable {
+    use Notifiable;
 
-    use HasFactory, Notifiable;
+    protected $guarded = [];
+    protected $hidden = ['password', 'remember_token'];
 
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'phong_ban_id',
-        'role',
-        'avatar',
-        'trang_thai'
-    ];
-
-    // --- CÁC HÀM CHECK QUYỀN (Helper Methods) ---
-
-    public function isNhanVien()
-    {
-        return $this->role === 'nhan_vien';
-    }
-
-    public function isTruongPhong()
-    {
-        return $this->role === 'truong_phong';
-    }
-
-    public function isGiamDoc()
-    {
-        return $this->role === 'giam_doc';
-    }
-
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
-    protected function casts(): array
-    {
+    protected function casts(): array {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'trang_thai' => 'boolean',
+            'vai_tro' => VaiTro::class,
         ];
     }
-    // Thêm đoạn này vào class User
-    public function phongBan()
-    {
-        return $this->belongsTo(PhongBan::class, 'phong_ban_id');
-    }
+
+
+    // --- CÁC HÀM CHECK QUYỀN ---
+    public function isAdmin(): bool { return $this->vai_tro === VaiTro::ADMIN; }
+    public function isNhanVien(): bool { return $this->vai_tro === VaiTro::NHAN_VIEN; }
+    public function isTruongPhong(): bool { return $this->vai_tro === VaiTro::TRUONG_PHONG; }
+    public function isGiamDoc(): bool { return $this->vai_tro === VaiTro::GIAM_DOC; }
+    public function isKeToan(): bool { return $this->vai_tro === VaiTro::KE_TOAN; }
+
+    public function phongBan() { return $this->belongsTo(PhongBan::class, 'phong_ban_id'); }
+    public function phieuYeuCauTao() { return $this->hasMany(PhieuYeuCau::class, 'nguoi_tao_id'); }
+    public function nhatKyDuyet() { return $this->hasMany(NhatKyDuyet::class, 'nguoi_thuc_hien_id'); }
+    public function giaoDichThanhToan() { return $this->hasMany(GiaoDichVnpay::class, 'ke_toan_id'); }
 }

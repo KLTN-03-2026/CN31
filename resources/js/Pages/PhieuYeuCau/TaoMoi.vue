@@ -1,16 +1,21 @@
 <script setup>
 import { useForm, Head } from '@inertiajs/vue3';
 
+// Nhận danh sách Danh mục từ Backend
+defineProps({
+    danhMucs: Array
+});
+
 const form = useForm({
     tieu_de: '',
     ly_do: '',
     san_pham: [
-        { ten_san_pham: '', so_luong: 1, don_gia: 0, ghi_chu: '' }
+        { ten_san_pham: '', danh_muc_id: '', so_luong: 1, don_gia: 0 }
     ]
 });
 
 const themDong = () => {
-    form.san_pham.push({ ten_san_pham: '', so_luong: 1, don_gia: 0, ghi_chu: '' });
+    form.san_pham.push({ ten_san_pham: '', danh_muc_id: '', so_luong: 1, don_gia: 0 });
 };
 
 const xoaDong = (index) => {
@@ -29,7 +34,6 @@ const submit = () => {
 </script>
 
 <template>
-
     <Head title="Tạo Yêu Cầu Mua Sắm" />
 
     <div class="py-12">
@@ -43,8 +47,7 @@ const submit = () => {
                             <input v-model="form.tieu_de" type="text"
                                 class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full mt-1"
                                 placeholder="VD: Mua Laptop cho nhân viên mới...">
-                            <div v-if="form.errors.tieu_de" class="text-red-500 text-sm mt-1">{{ form.errors.tieu_de }}
-                            </div>
+                            <div v-if="form.errors.tieu_de" class="text-red-500 text-sm mt-1">{{ form.errors.tieu_de }}</div>
                         </div>
 
                         <div>
@@ -57,32 +60,40 @@ const submit = () => {
                     <div class="border-t pt-4">
                         <h3 class="font-bold text-lg mb-4 text-blue-600">Danh sách hàng hóa</h3>
 
-                        <div class="flex gap-2 mb-2 font-bold text-sm text-gray-600">
-                            <div class="w-5/12">Tên sản phẩm</div>
-                            <div class="w-2/12">Số lượng</div>
-                            <div class="w-3/12">Đơn giá (VND)</div>
-                            <div class="w-1/12">Thao tác</div>
+                        <div class="grid grid-cols-12 gap-2 mb-2 font-bold text-sm text-gray-600">
+                            <div class="col-span-4">Tên sản phẩm</div>
+                            <div class="col-span-3">Danh mục</div>
+                            <div class="col-span-2">Số lượng</div>
+                            <div class="col-span-2">Đơn giá (VND)</div>
+                            <div class="col-span-1 text-center">Xóa</div>
                         </div>
 
-                        <div v-for="(item, index) in form.san_pham" :key="index" class="flex gap-2 mb-3 items-start">
-                            <div class="w-5/12">
+                        <div v-for="(item, index) in form.san_pham" :key="index" class="grid grid-cols-12 gap-2 mb-3 items-start">
+                            <div class="col-span-4">
                                 <input v-model="item.ten_san_pham" type="text"
                                     class="w-full border-gray-300 rounded-md shadow-sm text-sm"
                                     placeholder="Nhập tên...">
-                                <div v-if="form.errors[`san_pham.${index}.ten_san_pham`]" class="text-red-500 text-xs">
-                                    Bắt buộc nhập</div>
+                                <div v-if="form.errors[`san_pham.${index}.ten_san_pham`]" class="text-red-500 text-xs mt-1">Lỗi nhập liệu</div>
                             </div>
-                            <div class="w-2/12">
-                                <input v-model="item.so_luong" type="number" min="1"
-                                    class="w-full border-gray-300 rounded-md shadow-sm text-sm">
+
+                            <div class="col-span-3">
+                                <select v-model="item.danh_muc_id" class="w-full border-gray-300 rounded-md shadow-sm text-sm">
+                                    <option value="" disabled>-- Chọn danh mục --</option>
+                                    <option v-for="dm in danhMucs" :key="dm.id" :value="dm.id">
+                                        {{ dm.ten_danh_muc }}
+                                    </option>
+                                </select>
+                                <div v-if="form.errors[`san_pham.${index}.danh_muc_id`]" class="text-red-500 text-xs mt-1">Vui lòng chọn</div>
                             </div>
-                            <div class="w-3/12">
-                                <input v-model="item.don_gia" type="number" min="0"
-                                    class="w-full border-gray-300 rounded-md shadow-sm text-sm">
+
+                            <div class="col-span-2">
+                                <input v-model="item.so_luong" type="number" min="1" class="w-full border-gray-300 rounded-md shadow-sm text-sm">
                             </div>
-                            <div class="w-1/12">
-                                <button type="button" @click="xoaDong(index)"
-                                    class="text-red-500 hover:text-red-700 font-bold px-2 py-1">Xóa</button>
+                            <div class="col-span-2">
+                                <input v-model="item.don_gia" type="number" min="0" class="w-full border-gray-300 rounded-md shadow-sm text-sm">
+                            </div>
+                            <div class="col-span-1 text-center mt-1">
+                                <button type="button" @click="xoaDong(index)" class="text-red-500 hover:text-red-700 font-bold px-2 py-1">Xóa</button>
                             </div>
                         </div>
 
@@ -92,16 +103,15 @@ const submit = () => {
                                 + Thêm dòng sản phẩm
                             </button>
                             <div class="text-xl font-bold">
-                                Tổng tiền: <span class="text-green-600">{{ tongTienHienThi().toLocaleString() }}
-                                    đ</span>
+                                Tổng tiền: <span class="text-green-600">{{ tongTienHienThi().toLocaleString() }} đ</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex items-center justify-end mt-8 border-t pt-4">
                         <button :disabled="form.processing"
-                            class="ml-4 bg-blue-600 text-white px-6 py-3 rounded-md font-bold hover:bg-blue-700 shadow-lg uppercase tracking-widest text-xs transition ease-in-out duration-150">
-                            {{ form.processing ? 'Đang gửi...' : 'Gửi Yêu Cầu' }}
+                            class="bg-blue-600 text-white px-6 py-3 rounded-md font-bold hover:bg-blue-700 shadow uppercase tracking-widest text-sm transition">
+                            {{ form.processing ? 'Đang xử lý...' : 'Gửi Yêu Cầu' }}
                         </button>
                     </div>
                 </form>

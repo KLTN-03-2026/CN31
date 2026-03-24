@@ -92,9 +92,7 @@ const huyPhieu = () => {
                 </div>
 
                 <div class="p-8">
-                     </div>
-
-</div> <div class="p-8 border-t bg-white">
+                    </div> <div class="p-8 border-t bg-white">
                     <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-blue-600">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -130,6 +128,9 @@ const huyPhieu = () => {
                     </div>
                 </div>
                 <div class="bg-gray-50 px-6 py-4 flex flex-col md:flex-row justify-between items-center border-t gap-4">
+                    </div>
+
+
                 <div class="bg-gray-50 px-6 py-4 flex flex-col md:flex-row justify-between items-center border-t gap-4">
 
                     <a :href="route('phieu.print', phieu.id)" target="_blank"

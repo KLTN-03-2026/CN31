@@ -3,8 +3,8 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PhieuYeuCauController;
-use Illuminate\Container\Attributes\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\VnpayController;
 use Inertia\Inertia;
 
 // Route công khai (Ai cũng vào được)
@@ -12,11 +12,11 @@ Route::inertia('/', 'Home')->name('home');
 Route::inertia('/Page-Test', 'Page-Test')->name('home-test');
 //   dành cho KHÁCH (Chưa đăng nhập)
 Route::middleware('guest')->group(function () {
-    Route::inertia('/register', 'Auth/Register copy')->name('register');
-    Route::post('/register', [AuthController::class, 'Register'])->name('register.store');
+    Route::inertia('/register', 'Auth/Register')->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.store');
 
-    Route::inertia('/login', 'Auth/Login copy')->name('login');
-    Route::post('/login', [AuthController::class, 'Login'])->name('login.store');
+    Route::inertia('/login', 'Auth/Login')->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
 });
 
 //   dành cho THÀNH VIÊN (Đã đăng nhập)
@@ -33,7 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/phieu-yeu-cau/{id}', [PhieuYeuCauController::class, 'show'])->name('phieu.show');
 
     // Route Logout (Phải là POST)
-    Route::post('/logout', [AuthController::class, 'Logout'])->name('logout');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     // Route xử lý duyệt (Đặt trong middleware auth)
     Route::post('/phieu-yeu-cau/{id}/duyet', [PhieuYeuCauController::class, 'approve'])->name('phieu.duyet');
@@ -42,6 +42,13 @@ Route::middleware('auth')->group(function () {
     // Route nhân viên hủy phiếu yêu cầu
     Route::post('/phieu-yeu-cau/{id}/huy', [PhieuYeuCauController::class,'cancel'])->name('phieu.cancel');
 
+    // --- ROUTE THANH TOÁN VNPAY ---
+    Route::post('/phieu-yeu-cau/{id}/vnpay', [VnpayController::class, 'createPayment'])->name('vnpay.create');
+    Route::get('/vnpay-return', [VnpayController::class, 'vnpayReturn'])->name('vnpay.return');
+
+// --- ROUTE QUẢN LÝ NHÂN SỰ (Chỉ Admin) ---
+    Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+    Route::put('/users/{id}', [\App\Http\Controllers\UserController::class, 'update'])->name('users.update');
 });
 
 
