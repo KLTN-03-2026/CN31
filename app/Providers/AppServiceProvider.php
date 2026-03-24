@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL; // Thêm dòng này
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Thêm đoạn code này để ép dùng HTTPS khi lên mây
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }
