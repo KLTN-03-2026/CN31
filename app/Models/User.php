@@ -4,9 +4,10 @@ namespace App\Models;
 use App\Enums\VaiTro;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable {
-    use Notifiable;
+    use Notifiable, HasApiTokens;
 
     protected $guarded = [];
     protected $hidden = ['password', 'remember_token'];
@@ -27,9 +28,15 @@ class User extends Authenticatable {
     public function isTruongPhong(): bool { return $this->vai_tro === VaiTro::TRUONG_PHONG; }
     public function isGiamDoc(): bool { return $this->vai_tro === VaiTro::GIAM_DOC; }
     public function isKeToan(): bool { return $this->vai_tro === VaiTro::KE_TOAN; }
+    public function isMuaSam(): bool { return $this->vai_tro === VaiTro::NHAN_VIEN_MUA_SAM ;}
+    public function isNhanSu(): bool { return $this->vai_tro === VaiTro::NHAN_SU; }
 
+    // quan hệ
     public function phongBan() { return $this->belongsTo(PhongBan::class, 'phong_ban_id'); }
     public function phieuYeuCauTao() { return $this->hasMany(PhieuYeuCau::class, 'nguoi_tao_id'); }
     public function nhatKyDuyet() { return $this->hasMany(NhatKyDuyet::class, 'nguoi_thuc_hien_id'); }
     public function giaoDichThanhToan() { return $this->hasMany(GiaoDichVnpay::class, 'ke_toan_id'); }
+
+    // Accessor để tính số ngày phép còn lại
+    public function getNgayPhepConLaiAttribute() { return $this->tong_ngay_phep - $this->ngay_phep_da_dung;}
 }
