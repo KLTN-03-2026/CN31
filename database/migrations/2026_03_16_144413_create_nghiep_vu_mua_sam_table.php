@@ -10,11 +10,17 @@ return new class extends Migration {
         Schema::create('phieu_yeu_cau', function (Blueprint $table) {
             $table->id();
             $table->string('ma_phieu')->unique();
+            $table->string('loai_phieu')->default('mua_sam'); // Chuẩn bị sẵn cho đơn xin nghỉ phép sau này
             $table->foreignId('nguoi_tao_id')->constrained('users');
             $table->foreignId('phong_ban_id')->constrained('phong_ban');
+
+            // Của phòng Mua sắm điền sau:
+            $table->foreignId('nha_cung_cap_id')->nullable()->constrained('nha_cung_cap')->nullOnDelete();
+            $table->string('file_bao_gia')->nullable();
+
             $table->string('tieu_de');
             $table->text('ly_do')->nullable();
-            $table->decimal('tong_tien', 15, 0)->default(0);
+            $table->decimal('tong_tien', 15, 0)->nullable(); // Nullable vì NV tạo phiếu không biết giá
             $table->string('trang_thai')->default('nhap');
             $table->timestamps();
         });
@@ -22,14 +28,13 @@ return new class extends Migration {
         // 2. CHI TIẾT YÊU CẦU
         Schema::create('chi_tiet_yeu_cau', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('phieu_yeu_cau_id')->constrained('phieu_yeu_cau')->cascadeOnDelete(); // Xóa phiếu là xóa sạch chi tiết
-            $table->foreignId('danh_muc_id')->constrained('danh_muc'); // BẮT BUỘC có danh mục (NOT NULL)
-            $table->foreignId('nha_cung_cap_id')->nullable()->constrained('nha_cung_cap')->nullOnDelete();
+            $table->foreignId('phieu_yeu_cau_id')->constrained('phieu_yeu_cau')->cascadeOnDelete();
+            $table->foreignId('danh_muc_id')->constrained('danh_muc');
 
             $table->string('ten_san_pham');
             $table->integer('so_luong');
-            $table->decimal('don_gia', 15, 0);
-            $table->decimal('thanh_tien', 15, 0);
+            $table->decimal('don_gia', 15, 0)->nullable(); // Nullable
+            $table->decimal('thanh_tien', 15, 0)->nullable(); // Nullable
             $table->text('ghi_chu')->nullable();
             $table->timestamps();
         });
