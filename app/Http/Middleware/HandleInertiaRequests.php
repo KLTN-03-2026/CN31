@@ -17,11 +17,14 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
-            // Chia sẻ thông tin User
+
             'auth' => [
                 'user' => $request->user(),
+                'notifications' => $request->user() ? [
+                    'list' => $request->user()->notifications()->limit(10)->get(),
+                    'unread_count' => $request->user()->unreadNotifications()->count(),
+                ] : null,
             ],
-            // Chia sẻ thông báo (Flash Message)
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),
                 'error' => fn() => $request->session()->get('error'),

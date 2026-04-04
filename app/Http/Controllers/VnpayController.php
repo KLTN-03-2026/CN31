@@ -16,11 +16,19 @@ class VnpayController extends Controller
     // 1. TẠO URL VÀ ĐẨY SANG VNPAY
     public function createPayment($id)
     {
-        $phieu = PhieuYeuCau::findOrFail($id);
+       $phieu = PhieuYeuCau::findOrFail($id);
 
-        // Bảo mật: Chỉ Kế toán mới được thanh toán và phiếu phải ở trạng thái Chờ Thanh Toán
         if (!Auth::user()->isKeToan() || $phieu->trang_thai !== TrangThaiPhieu::CHO_THANH_TOAN) {
             return back()->withErrors(['error' => 'Bạn không có quyền hoặc phiếu chưa hợp lệ để thanh toán!']);
+        }
+
+        $phieu->load('nguoiTao.phongBan');
+        $phongBan = $phieu->nguoiTao->phongBan ?? null;
+
+        if ($phongBan && $phongBan->ngan_sach_tong > 0) {
+            if ($phieu->tong_tien > $phongBan->ngan_sach_con_lai) {
+                return back()->withErrors(['error' => 'GIAO DỊCH BỊ CHẶN: Ngân sách khả dụng của ' . $phongBan->ten_phong_ban . ' hiện chỉ còn ' . number_format($phongBan->ngan_sach_con_lai) . ' đ. Không đủ để thanh toán phiếu này!']);
+            }
         }
 
         $vnp_TmnCode = env('VNPAY_TMN_CODE');
@@ -110,32 +118,48 @@ class VnpayController extends Controller
             if ($request->vnp_ResponseCode == '00') {
                 // THANH TOÁN THÀNH CÔNG
                 DB::transaction(function () use ($phieu, $request) {
-                    $phieu->update(['trang_thai' => TrangThaiPhieu::DA_THANH_TOAN]);
+                    if ($phieu->trang_thai !== TrangThaiPhieu::DA_THANH_TOAN) {
 
-                    GiaoDichVnpay::create([
-                        'ma_giao_dich_vnpay' => $request->vnp_TransactionNo,
-                        'ke_toan_id' => Auth::id(),
-                        'phieu_yeu_cau_id' => $phieu->id,
-                        'ma_ngan_hang' => $request->vnp_BankCode,
-                        'so_tien_thanh_toan' => $request->vnp_Amount / 100,
-                        'thong_tin_don_hang' => $request->vnp_OrderInfo,
-                        'ngay_thanh_toan' => now(),
-                        'trang_thai_giao_dich' => 'thanh_cong',
-                    ]);
+                        $phieu->update(['trang_thai' => TrangThaiPhieu::DA_THANH_TOAN]);
 
-                    NhatKyDuyet::create([
-                        'phieu_yeu_cau_id' => $phieu->id,
-                        'nguoi_thuc_hien_id' => Auth::id(),
-                        'hanh_dong' => HanhDong::THANH_TOAN,
-                        'ghi_chu' => 'Kế toán đã thanh toán qua VNPAY (Mã GD: ' . $request->vnp_TransactionNo . ')',
-                    ]);
+                        $phieu->load('nguoiTao.phongBan'); // Load data cho chắc chắn
+                        $phongBan = $phieu->nguoiTao->phongBan ?? null;
+                        if ($phongBan) {
+                            $phongBan->increment('ngan_sach_su_dung', $phieu->tong_tien);
+                        }
+                        // ==========================================
+
+                        GiaoDichVnpay::create([
+                            'ma_giao_dich_vnpay' => $request->vnp_TransactionNo,
+                            'ke_toan_id' => Auth::id(),
+                            'phieu_yeu_cau_id' => $phieu->id,
+                            'ma_ngan_hang' => $request->vnp_BankCode,
+                            'so_tien_thanh_toan' => $request->vnp_Amount / 100,
+                            'thong_tin_don_hang' => $request->vnp_OrderInfo,
+                            'ngay_thanh_toan' => now(),
+                            'trang_thai_giao_dich' => 'thanh_cong',
+                        ]);
+
+                        NhatKyDuyet::create([
+                            'phieu_yeu_cau_id' => $phieu->id,
+                            'nguoi_thuc_hien_id' => Auth::id(),
+                            'hanh_dong' => HanhDong::THANH_TOAN,
+                            'ghi_chu' => 'Kế toán đã thanh toán qua VNPAY (Mã GD: ' . $request->vnp_TransactionNo . ')',
+                        ]);
+                    }
                 });
 
                 return redirect()->route('phieu.show', $phieu->id)->with('success', 'Thanh toán VNPAY thành công!');
             } else {
                 // THANH TOÁN THẤT BẠI / HỦY
+
+                // KIỂM TRA CHẶT CHẼ: Nếu VNPAY trả về mã bằng 0 hoặc rỗng thì ta tự sinh mã CANCEL
+                $maGD = (!empty($request->vnp_TransactionNo) && $request->vnp_TransactionNo !== '0')
+                        ? $request->vnp_TransactionNo
+                        : 'CANCEL_' . time() . '_' . $phieu->id;
+
                 GiaoDichVnpay::create([
-                    'ma_giao_dich_vnpay' => $request->vnp_TransactionNo ?? 'Huy_Giao_Dich',
+                    'ma_giao_dich_vnpay' => $maGD, // Dùng biến vừa xử lý ở trên
                     'ke_toan_id' => Auth::id(),
                     'phieu_yeu_cau_id' => $phieu->id,
                     'ma_ngan_hang' => $request->vnp_BankCode ?? 'UNKNOWN',

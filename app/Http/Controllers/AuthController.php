@@ -27,10 +27,7 @@ class AuthController extends Controller
             $fields['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
 
-        // 3. Tạo User (Mật khẩu tự động được mã hóa nhờ Model casts 'hashed')
         $user = User::create($fields);
-
-        // 4. Đăng nhập ngay sau khi tạo
         Auth::login($user);
 
         // Tối ưu: Dùng to_route() ngắn gọn hơn redirect()->route()
@@ -64,13 +61,12 @@ class AuthController extends Controller
     // Đổi tên thành chữ thường: logout
     public function logout(Request $request): RedirectResponse
     {
-        // Chỉ cần 1 dòng này là đủ cho guard mặc định
-        Auth::logout();
 
+        Auth::logout();
         // Xóa sạch session và token
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return to_route('login')->with('success', 'Bạn đã đăng xuất an toàn.');
+        return to_route('login')->with('success', 'Bạn đã đăng xuất thành công.');
     }
 }

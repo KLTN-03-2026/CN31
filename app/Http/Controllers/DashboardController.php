@@ -25,7 +25,8 @@ class DashboardController extends Controller
                 TrangThaiPhieu::CHO_GIAM_DOC_DUYET,
                 TrangThaiPhieu::CHO_THANH_TOAN,
             ])->count(),
-            'hoan_tat'  => (clone $baseQuery)->where('trang_thai', TrangThaiPhieu::DA_THANH_TOAN)->count(),
+            'da_thanh_toan' => (clone $baseQuery)->where('trang_thai', TrangThaiPhieu::DA_THANH_TOAN)->count(),
+            'hoan_tat'  => (clone $baseQuery)->where('trang_thai', TrangThaiPhieu::DA_HOAN_TAT)->count(),
             'that_bai'   => (clone $baseQuery)->whereIn('trang_thai', [
                 TrangThaiPhieu::TU_CHOI,
                 TrangThaiPhieu::DA_HUY
@@ -56,10 +57,11 @@ class DashboardController extends Controller
             ->paginate(5)
             ->withQueryString() // QUAN TRỌNG: Giữ lại tham số tìm kiếm trên URL khi qua trang 2, 3...
             ->through(function ($phieu) {
-                return [           
+                return [
                     'id'               => $phieu->id,
                     'ma_phieu'         => $phieu->ma_phieu,
                     'tieu_de'          => $phieu->tieu_de,
+                    'loai_phieu'       => $phieu->loai_phieu,
                     'nguoi_tao'        => $phieu->nguoiTao->name,
                     'ngay_tao'         => $phieu->created_at->format('d/m/Y H:i'),
                     'tong_tien'        => number_format($phieu->tong_tien, 0, ',', '.') . ' VNĐ',
