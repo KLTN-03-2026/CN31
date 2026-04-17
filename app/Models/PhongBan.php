@@ -9,7 +9,7 @@ class PhongBan extends Model {
     public function users() { return $this->hasMany(User::class, 'phong_ban_id'); }
     public function truongPhong() { return $this->belongsTo(User::class, 'truong_phong_id'); }
     public function phieuYeuCau() { return $this->hasMany(PhieuYeuCau::class, 'phong_ban_id'); }
-    
+
     // Tính phần trăm ngân sách đã sử dụng
     public function getPhanTramSuDungAttribute()
     {

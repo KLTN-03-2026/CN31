@@ -37,20 +37,23 @@ class PhieuYeuCau extends Model
 
         // 3. Nhân viên Mua sắm: Thấy phiếu đã được Trưởng phòng duyệt, chờ điền giá
         if ($user->isMuaSam()) {
-            return $query->where('trang_thai', TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA);
+            return $query->where('trang_thai', [
+                TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA,
+                ]);
         }
 
-        // 4. Trưởng phòng: Lọc ra các phiếu thuộc phòng ban mình đang chờ duyệt
+        // 4. Trưởng phòng: Lọc ra các phiếu thuộc phòng ban của mình
         if ($user->isTruongPhong()) {
             return $query->where('phong_ban_id', $user->phong_ban_id)
-                ->where('trang_thai', TrangThaiPhieu::CHO_TRUONG_PHONG_DUYET);
+                        ->where('trang_thai', TrangThaiPhieu::CHO_TRUONG_PHONG_DUYET);
+
         }
         //5. Nhân sự (HR): Chỉ thấy phiếu nghỉ phép đang chờ duyệt hoặc đã hoàn tất, từ chối, hủy
         if ($user->isNhanSu()) {
             return $query->where('loai_phieu', '=', 'nghi_phep')
                 ->whereIn('trang_thai', [
                     TrangThaiPhieu::CHO_NHAN_SU_DUYET,
-                    TrangThaiPhieu::DA_HOAN_TAT,
+                    TrangThaiPhieu::NHAN_SU_DUYET,
                     TrangThaiPhieu::TU_CHOI,
                     TrangThaiPhieu::DA_HUY,
                 ]);

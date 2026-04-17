@@ -49,7 +49,7 @@ return new class extends Migration {
             $table->timestamp('thoi_gian_duyet')->useCurrent(); // Đổi tên chuẩn theo ERD
         });
 
-        // 4. GIAO DỊCH VNPAY (MỚI)
+        // 4. GIAO DỊCH VNPAY 
         Schema::create('giao_dich_vnpay', function (Blueprint $table) {
             $table->id();
             $table->string('ma_giao_dich_vnpay')->unique();
