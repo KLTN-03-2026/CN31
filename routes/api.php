@@ -3,10 +3,24 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PhieuYeuCauController; // Thêm dòng use này
 
-Route::post('/login', [AuthController::class, 'login'])->name('api.login');
+Route::post('/login', [AuthController::class, 'login']);
 
-// Tuyến đường test (Bắt buộc phải có Token mới vào được)
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+// KHU VỰC ĐƯỢC BẢO VỆ BỞI SANCTUM (BẮT BUỘC CÓ TOKEN)
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Tuyến đường test
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    // API Lấy danh sách phiếu chờ duyệt cho Mobile App
+    Route::get('/phieu-yeu-cau/cho-duyet', [PhieuYeuCauController::class, 'danhSachChoDuyet']);
+    // API Xử lý phiếu (Duyệt/Từ chối) cho Mobile App
+    Route::post('/phieu-yeu-cau/{id}/xu-ly', [PhieuYeuCauController::class, 'xuLy']);
+
+    // API Lấy chi tiết phiếu cho Mobile App
+    Route::get('/phieu-yeu-cau/{id}', [PhieuYeuCauController::class, 'show']);
+
 });

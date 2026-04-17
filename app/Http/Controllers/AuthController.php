@@ -6,23 +6,19 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
+use Inertia\Inertia;
+
 
 class AuthController extends Controller
 {
-    // Đổi tên thành chữ thường: register
-    public function register(Request $request): RedirectResponse
-    {
-        // 1. Validate chặt chẽ
-        $fields = $request->validate([
-            'avatar'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,avif', 'max:5048'],
-            'name'          => ['required', 'string', 'max:255'],
-            'email'         => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password'      => ['required', 'confirmed', 'min:8'],
-            'phong_ban_id'  => ['required', 'exists:phong_ban,id']
-             ]);
 
-        // 2. Upload Avatar (Tối ưu dùng $request->file thay vì $request->avatar)
+    public function register(RegisterRequest $request): RedirectResponse
+    {
+
+        $fields = $request->validated();
+
         if ($request->hasFile('avatar')) {
             $fields['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
@@ -34,15 +30,10 @@ class AuthController extends Controller
         return to_route('dashboard')->with('success', 'Đăng ký tài khoản thành công!');
     }
 
-    // Đổi tên thành chữ thường: login
-    public function login(Request $request): RedirectResponse
+    public function login(LoginRequest $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required']
-        ]);
+        $credentials = $request->validated();
 
-        // Tối ưu: Ép kiểu boolean cho nút Remember Me an toàn hơn
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             // Chống tấn công Session Fixation
             $request->session()->regenerate();

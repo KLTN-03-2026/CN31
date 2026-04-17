@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\PhieuYeuCau;
 use App\Models\NhatKyDuyet;
+use App\Models\ChiTietNghiPhep;
+use App\Models\NhaCungCap;
 use App\Models\User;
 use App\Enums\TrangThaiPhieu;
 use App\Enums\HanhDong;
@@ -57,7 +59,7 @@ class PhieuYeuCauController extends Controller
 
         $phieu->load(['chiTiet.danhMuc', 'nhaCungCap']);
         $nhaCungCaps = (Auth::user()->isMuaSam() && $phieu->trang_thai === TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA)
-            ? \App\Models\NhaCungCap::select('id', 'ten_nha_cung_cap')->get() : [];
+            ? NhaCungCap::select('id', 'ten_nha_cung_cap')->get() : [];
 
         $nganSach = null;
         if ($phieu->nguoiTao && $phieu->nguoiTao->phongBan) {
@@ -66,7 +68,7 @@ class PhieuYeuCauController extends Controller
                 'ten_phong' => $pb->ten_phong_ban,
                 'tong' => $pb->ngan_sach_tong,
                 'da_dung' => $pb->ngan_sach_su_dung,
-                'con_lai' => $pb->ngan_sach_con_lai,
+                'con_lai' => $pb->getNganSachConLaiAttribute(),
                 'phan_tram' => $pb->phan_tram_su_dung,
             ];
         }
@@ -112,9 +114,7 @@ class PhieuYeuCauController extends Controller
             $trangThaiMoi = $phieu->trang_thai;
             $hanhDongLog = HanhDong::TU_CHOI;
 
-            // ==========================================
             // LUỒNG TỪ CHỐI
-            // ==========================================
             if ($hanhDongInput === 'tu_choi') {
                 $trangThaiMoi = TrangThaiPhieu::TU_CHOI;
 
@@ -123,9 +123,7 @@ class PhieuYeuCauController extends Controller
                     $phieu->nguoiTao->notify(new PhieuYeuCauNotification($phieu, 'Phiếu yêu cầu của bạn đã bị TỪ CHỐI bởi ' . $user->name . '. Lý do: ' . $ghiChu, 'error'));
                 }
             }
-            // ==========================================
-            // LUỒNG PHÊ DUYỆT (CHẤP NHẬN)
-            // ==========================================
+            // LUỒNG PHÊ DUYỆT (CHẤP NHẬN)å
             else {
                 // --- 1. NHÁNH NGHỈ PHÉP ---
                 if ($phieu->loai_phieu === 'nghi_phep') {
@@ -137,16 +135,16 @@ class PhieuYeuCauController extends Controller
                         $hr = User::where('vai_tro', 'nhan_su')->first();
                         if ($hr) $hr->notify(new PhieuYeuCauNotification($phieu, 'Có đơn xin nghỉ phép đã được Trưởng phòng duyệt. Vui lòng kiểm tra và chốt phép.', 'info'));
 
-                        // [MỚI] Báo ngược cho Nhân viên an tâm
+                        // Báo ngược cho Nhân viên an tâm
                         if ($phieu->nguoiTao) {
                             $phieu->nguoiTao->notify(new PhieuYeuCauNotification($phieu, 'Trưởng phòng đã DUYỆT đơn nghỉ phép của bạn. Đang chờ Nhân sự chốt sổ.', 'success'));
                         }
 
                     } elseif ($user->isNhanSu() && $phieu->trang_thai === TrangThaiPhieu::CHO_NHAN_SU_DUYET) {
-                        $trangThaiMoi = TrangThaiPhieu::DA_HOAN_TAT;
+                        $trangThaiMoi = TrangThaiPhieu::NHAN_SU_DUYET;
                         $hanhDongLog = HanhDong::NHAN_SU_DUYET;
 
-                        $chiTiet = \App\Models\ChiTietNghiPhep::where('phieu_yeu_cau_id', $phieu->id)->first();
+                        $chiTiet = ChiTietNghiPhep::where('phieu_yeu_cau_id', $phieu->id)->first();
                         if ($chiTiet && $chiTiet->loai_nghi_phep === 'nghi_phep_nam') {
                             User::where('id', $phieu->nguoi_tao_id)->increment('ngay_phep_da_dung', $chiTiet->so_ngay_nghi);
                         }
@@ -169,7 +167,7 @@ class PhieuYeuCauController extends Controller
                         $muaSam = User::where('vai_tro', 'nhan_vien_mua_sam')->first();
                         if ($muaSam) $muaSam->notify(new PhieuYeuCauNotification($phieu, 'Trưởng phòng đã duyệt yêu cầu mua sắm. Vui lòng tìm nhà cung cấp và chốt báo giá.', 'info'));
 
-                        // [MỚI] Báo ngược cho Nhân viên an tâm
+                        // Báo ngược cho Nhân viên an tâm
                         if ($phieu->nguoiTao) {
                             $phieu->nguoiTao->notify(new PhieuYeuCauNotification($phieu, 'Trưởng phòng đã DUYỆT phiếu mua sắm của bạn. Hệ thống đã chuyển sang phòng Mua Sắm để xử lý.', 'success'));
                         }
@@ -182,12 +180,12 @@ class PhieuYeuCauController extends Controller
                         $keToan = User::where('vai_tro', 'ke_toan')->first();
                         if ($keToan) $keToan->notify(new PhieuYeuCauNotification($phieu, 'Giám đốc đã duyệt phiếu mua sắm vượt hạn mức. Vui lòng thực hiện thanh toán.', 'success'));
 
-                        // [MỚI] Báo ngược cho Nhân viên tạo phiếu
+                        // Báo ngược cho Nhân viên tạo phiếu
                         if ($phieu->nguoiTao) {
                             $phieu->nguoiTao->notify(new PhieuYeuCauNotification($phieu, 'Sếp lớn đã DUYỆT phiếu mua sắm của bạn. Kế toán đang tiến hành thanh toán.', 'success'));
                         }
 
-                        // [MỚI] Báo ngược cho Mua sắm (Vì họ là người vất vả làm báo giá trình lên)
+                        // Báo ngược cho Mua sắm (Vì họ là người vất vả làm báo giá trình lên)
                         $muaSam = User::where('vai_tro', 'nhan_vien_mua_sam')->first();
                         if ($muaSam) {
                             $muaSam->notify(new PhieuYeuCauNotification($phieu, 'Giám đốc đã DUYỆT báo giá bạn vừa trình lên. Hệ thống đã báo Kế toán chi tiền.', 'success'));
@@ -248,4 +246,5 @@ class PhieuYeuCauController extends Controller
             'url' => route('phieu.show', $notification->data['phieu_id'])
         ], 200);
     }
+
 }

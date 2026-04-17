@@ -25,7 +25,8 @@ class DanhMucController extends Controller
         $request->validate([
             'ten_danh_muc' => 'required|string|max:255|unique:danh_muc,ten_danh_muc',
             'mo_ta' => 'nullable|string'
-        ], [
+        ],
+        [
             'ten_danh_muc.required' => 'Vui lòng nhập tên danh mục',
             'ten_danh_muc.unique' => 'Tên danh mục này đã tồn tại'
         ]);
@@ -37,9 +38,9 @@ class DanhMucController extends Controller
 
 
 // 3. Cập nhật danh mục
-    public function update(Request $request, $id) // Sửa tham số chỗ này
+    public function update(Request $request, $id)
     {
-        $danhMuc = DanhMuc::findOrFail($id); // Ép nó phải tìm ra đúng ID
+        $danhMuc = DanhMuc::findOrFail($id);
 
         $request->validate([
             'ten_danh_muc' => 'required|string|max:255|unique:danh_muc,ten_danh_muc,' . $danhMuc->id,
@@ -51,9 +52,9 @@ class DanhMucController extends Controller
     }
 
     // 4. Xóa danh mục
-    public function destroy($id) // Sửa tham số chỗ này
+    public function destroy($id)
     {
-        $danhMuc = DanhMuc::findOrFail($id); // Ép nó tìm ra đúng ID rồi mới chém
+        $danhMuc = DanhMuc::findOrFail($id);
         $danhMuc->delete();
 
         return redirect()->back()->with('success', 'Đã xóa danh mục thành công!');
