@@ -49,7 +49,6 @@ class AuthController extends Controller
         ])->onlyInput('email');
     }
 
-    // Đổi tên thành chữ thường: logout
     public function logout(Request $request): RedirectResponse
     {
 
