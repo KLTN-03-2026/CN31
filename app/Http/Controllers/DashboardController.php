@@ -17,6 +17,10 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $vaiTro = $user->vai_tro;
+        // Admin
+        if($vaiTro === VaiTro::ADMIN) {
+            return redirect()->route('admin.users.index');
+        }
         // Kế Toán
         if ($vaiTro === VaiTro::KE_TOAN) {
             return redirect()->route('accountant.index');

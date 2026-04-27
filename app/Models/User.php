@@ -5,6 +5,7 @@ use App\Enums\VaiTro;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Notifications\PhieuYeuCauNotification;
 
 class User extends Authenticatable {
     use Notifiable, HasApiTokens;
@@ -36,6 +37,7 @@ class User extends Authenticatable {
     public function phieuYeuCauTao() { return $this->hasMany(PhieuYeuCau::class, 'nguoi_tao_id'); }
     public function nhatKyDuyet() { return $this->hasMany(NhatKyDuyet::class, 'nguoi_thuc_hien_id'); }
     public function giaoDichThanhToan() { return $this->hasMany(GiaoDichVnpay::class, 'ke_toan_id'); }
+    public function chungTuThanhToan() { return $this->hasMany(ChungTuThanhToan::class, 'ke_toan_id'); }
 
     // Accessor để tính số ngày phép còn lại
     public function getNgayPhepConLaiAttribute() { return $this->tong_ngay_phep - $this->ngay_phep_da_dung;}

@@ -14,36 +14,43 @@ use Inertia\Inertia;
 class AuthController extends Controller
 {
 
-    public function register(RegisterRequest $request): RedirectResponse
-    {
+    // public function register(RegisterRequest $request): RedirectResponse
+    // {
 
-        $fields = $request->validated();
+    //     $fields = $request->validated();
 
-        if ($request->hasFile('avatar')) {
-            $fields['avatar'] = $request->file('avatar')->store('avatars', 'public');
-        }
+    //     if ($request->hasFile('avatar')) {
+    //         $fields['avatar'] = $request->file('avatar')->store('avatars', 'public');
+    //     }
 
-        $user = User::create($fields);
-        Auth::login($user);
+    //     $user = User::create($fields);
+    //     Auth::login($user);
 
-        // Tối ưu: Dùng to_route() ngắn gọn hơn redirect()->route()
-        return to_route('dashboard')->with('success', 'Đăng ký tài khoản thành công!');
-    }
+    //     // Tối ưu: Dùng to_route() ngắn gọn hơn redirect()->route()
+    //     return to_route('dashboard')->with('success', 'Đăng ký tài khoản thành công!');
+    // }
 
     public function login(LoginRequest $request): RedirectResponse
     {
         $credentials = $request->validated();
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            // Chống tấn công Session Fixation
-            $request->session()->regenerate();
 
-            // intended() giúp chuyển hướng về trang cũ nếu trước đó user bị văng ra
+            if (Auth::user()->trang_thai == false) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Tài khoản của bạn đã bị vô hiệu hóa (Đã nghỉ việc). Vui lòng liên hệ Admin.',
+                ])->onlyInput('email');
+            }
+
+            $request->session()->regenerate();
             return redirect()->intended(route('dashboard'))
                              ->with('success', 'Chào mừng bạn quay lại hệ thống!');
         }
 
-        // UX: Trả về lỗi kèm theo email đã nhập để user không phải gõ lại
         return back()->withErrors([
             'password' => 'Email hoặc mật khẩu không chính xác.',
         ])->onlyInput('email');

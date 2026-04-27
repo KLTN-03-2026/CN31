@@ -58,11 +58,13 @@ class PhieuYeuCauController extends Controller
         }
 
         $phieu->load(['chiTiet.danhMuc', 'nhaCungCap']);
-        $nhaCungCaps = (Auth::user()->isMuaSam() && $phieu->trang_thai === TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA)
-            ? NhaCungCap::select('id', 'ten_nha_cung_cap')->get() : [];
+        $nhaCungCaps = (Auth::user()->isMuaSam() && $phieu->trang_thai === \App\Enums\TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA)
+            ? \App\Models\NhaCungCap::select('id', 'ten_nha_cung_cap')->get() : [];
 
         $nganSach = null;
-        if ($phieu->nguoiTao && $phieu->nguoiTao->phongBan) {
+
+        // BẢO MẬT BACKEND: Chỉ truy xuất và gửi dữ liệu ngân sách nếu User KHÔNG PHẢI là Nhân viên
+        if (Auth::user()->vai_tro !== 'nhan_vien' && $phieu->nguoiTao && $phieu->nguoiTao->phongBan) {
             $pb = $phieu->nguoiTao->phongBan;
             $nganSach = [
                 'ten_phong' => $pb->ten_phong_ban,
@@ -123,7 +125,7 @@ class PhieuYeuCauController extends Controller
                     $phieu->nguoiTao->notify(new PhieuYeuCauNotification($phieu, 'Phiếu yêu cầu của bạn đã bị TỪ CHỐI bởi ' . $user->name . '. Lý do: ' . $ghiChu, 'error'));
                 }
             }
-            // LUỒNG PHÊ DUYỆT (CHẤP NHẬN)å
+            // LUỒNG PHÊ DUYỆT (CHẤP NHẬN)
             else {
                 // --- 1. NHÁNH NGHỈ PHÉP ---
                 if ($phieu->loai_phieu === 'nghi_phep') {
@@ -236,15 +238,13 @@ class PhieuYeuCauController extends Controller
     public function markNotificationAsRead($id)
     {
         $notification = Auth::user()->notifications()->findOrFail($id);
-
-        // Chuyển trạng thái từ "chưa đọc" (unread) sang "đã đọc" (read)
         $notification->markAsRead();
 
-        // Trả về JSON chứa URL để Frontend (Web hoặc Mobile sau này) biết đường mà chuyển trang
-        return response()->json([
-            'success' => true,
-            'url' => route('phieu.show', $notification->data['phieu_id'])
-        ], 200);
+        $url = isset($notification->data['phieu_id'])
+             ? route('phieu.show', $notification->data['phieu_id'])
+             : route('dashboard');
+
+        return response()->json(['success' => true, 'url' => $url], 200);
     }
 
 }

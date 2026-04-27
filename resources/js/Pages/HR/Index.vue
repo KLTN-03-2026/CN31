@@ -207,8 +207,8 @@ onBeforeUnmount(() => { if (chartInstance) chartInstance.destroy(); });
                                         <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded border border-rose-100">{{ formatLoaiNghi(nv.loai) }}</span>
                                     </div>
                                 </div>
-                                <div v-else class="flex-grow flex flex-col items-center justify-center text-slate-400">
-                                    <p class="text-sm font-medium">Hôm nay toàn công ty đi làm đầy đủ 🚀</p>
+                                <div v-else class="flex-grow flex flex-col items-center justify-center text-slate-500">
+                                    <p class="text-sm font-medium">Hôm nay toàn công ty đi làm đầy đủ </p>
                                 </div>
                             </div>
                         </div>

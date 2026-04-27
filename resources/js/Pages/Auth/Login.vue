@@ -49,10 +49,10 @@ const submit = () => {
                     </div>
                 </form>
 
-                <div class="mt-8 text-center text-sm text-slate-500 font-medium border-t border-slate-100 pt-6">
+                <!-- <div class="mt-8 text-center text-sm text-slate-500 font-medium border-t border-slate-100 pt-6">
                     Chưa có tài khoản?
                     <Link :href="route('register')" class="font-bold text-blue-600 hover:text-blue-800 ml-1 transition-colors">Đăng ký ngay</Link>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>

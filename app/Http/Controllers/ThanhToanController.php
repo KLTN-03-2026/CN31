@@ -26,7 +26,7 @@ class ThanhToanController extends Controller
 
         $ncc = $phieu->nhaCungCap;
         if (!$ncc || !$ncc->so_tai_khoan) {
-            return back()->withErrors(['error' => 'Nhà cung cấp này chưa có thông tin Ngân hàng.']);
+           return redirect()->back()->with('error', 'Không thể thanh toán! Phiếu này chưa có thông tin Nhà cung cấp hoặc Ngân hàng.');
         }
 
         // Tạo nội dung chuyển khoản: Bắt buộc chứa Mã phiếu

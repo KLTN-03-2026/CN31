@@ -4,59 +4,78 @@ namespace App\Http\Controllers;
 
 use App\Models\DanhMuc;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class DanhMucController extends Controller
 {
-    // 1. Lấy danh sách hiển thị ra giao diện
-    public function index()
+    // HIỂN THỊ & TÌM KIẾM
+    public function index(Request $request)
     {
-        // Lấy tất cả danh mục, xếp cái mới nhất lên đầu
-        $danhMucs = DanhMuc::latest()->get();
+        if (!Auth::user()->isAdmin()) abort(403);
 
-        return Inertia::render('DanhMuc/Index', [
-            'danhMucs' => $danhMucs
+        $query = DanhMuc::orderBy('created_at', 'desc');
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('ten_danh_muc', 'like', "%{$search}%");
+        }
+
+        $danhMucs = $query->paginate(10)->withQueryString();
+
+        return Inertia::render('Admin/DanhMuc/Index', [
+            'danhMucs' => $danhMucs,
+            'filters' => $request->only('search')
         ]);
     }
 
-    // 2. Thêm mới danh mục
+    // THÊM MỚI
     public function store(Request $request)
     {
-        $request->validate([
-            'ten_danh_muc' => 'required|string|max:255|unique:danh_muc,ten_danh_muc',
-            'mo_ta' => 'nullable|string'
-        ],
-        [
-            'ten_danh_muc.required' => 'Vui lòng nhập tên danh mục',
-            'ten_danh_muc.unique' => 'Tên danh mục này đã tồn tại'
-        ]);
-        // Tạo mới danh mục
-        DanhMuc::create($request->all());
+        if (!Auth::user()->isAdmin()) abort(403);
 
-        return redirect()->back()->with('success', 'Đã thêm danh mục mới thành công!');
+        $validated = $request->validate([
+            'ten_danh_muc' => 'required|string|max:255|unique:danh_muc,ten_danh_muc',
+            'mo_ta' => 'nullable|string',
+        ], [
+            'ten_danh_muc.unique' => 'Tên danh mục này đã tồn tại trong hệ thống.'
+        ]);
+
+        DanhMuc::create($validated);
+
+        return back()->with('success', 'Đã thêm danh mục mới thành công!');
     }
 
-
-// 3. Cập nhật danh mục
+    // CẬP NHẬT
     public function update(Request $request, $id)
     {
+        if (!Auth::user()->isAdmin()) abort(403);
+
         $danhMuc = DanhMuc::findOrFail($id);
 
-        $request->validate([
-            'ten_danh_muc' => 'required|string|max:255|unique:danh_muc,ten_danh_muc,' . $danhMuc->id,
-            'mo_ta' => 'nullable|string'
+        $validated = $request->validate([
+            'ten_danh_muc' => 'required|string|max:255|unique:danh_muc,ten_danh_muc,' . $id,
+            'mo_ta' => 'nullable|string',
         ]);
 
-        $danhMuc->update($request->all());
-        return redirect()->back()->with('success', 'Đã cập nhật danh mục!');
+        $danhMuc->update($validated);
+
+        return back()->with('success', 'Cập nhật danh mục thành công!');
     }
 
-    // 4. Xóa danh mục
+    // XÓA
     public function destroy($id)
     {
-        $danhMuc = DanhMuc::findOrFail($id);
-        $danhMuc->delete();
+        if (!Auth::user()->isAdmin()) abort(403);
 
-        return redirect()->back()->with('success', 'Đã xóa danh mục thành công!');
+        $danhMuc = DanhMuc::findOrFail($id);
+
+        try {
+            $danhMuc->delete();
+            return back()->with('success', 'Đã xóa danh mục.');
+        } catch (\Exception $e) {
+            // Nếu bảng PhieuYeuCau có foreign key trỏ tới danh_muc_id, Laravel sẽ throw Exception khi cố xóa
+            return back()->withErrors(['error' => 'Không thể xóa danh mục này vì đang có Phiếu yêu cầu sử dụng nó!']);
+        }
     }
 }

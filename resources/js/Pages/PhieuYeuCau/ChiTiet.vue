@@ -217,7 +217,7 @@ const formatGhiChu = (text) => {
         </div>
 
         <div class="lg:w-1/3 space-y-5">
-          <div v-if="nganSach" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div v-if="nganSach && user.vai_tro !== 'nhan_vien'" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
             <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Ngân sách {{ nganSach.ten_phong }}</h3>
             <div class="flex justify-between items-end mb-2">
               <span class="text-2xl font-black text-slate-900">{{ nganSach.phan_tram }}%</span>
@@ -262,7 +262,7 @@ const formatGhiChu = (text) => {
         </div>
       </div>
 
-      <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200 sticky bottom-4 z-40">
+    <div class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200 sticky bottom-4 z-40">
         <a :href="route('phieu.print', phieu.id)" target="_blank" class="text-sm font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 00-2 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
           In phiếu PDF
@@ -289,11 +289,16 @@ const formatGhiChu = (text) => {
           <button @click="showNhanHangModal = true" class="w-full px-6 py-2.5 bg-emerald-700 text-white rounded-lg font-bold shadow-sm hover:bg-emerald-800 transition-all flex items-center justify-center gap-2 text-sm">Xác nhận Đã nhận hàng</button>
         </div>
 
+        <div v-else-if="canCancel" class="w-full sm:w-auto">
+          <button @click="huyPhieu" :disabled="isProcessingCancel" class="w-full px-6 py-2.5 bg-orange-100 text-orange-700 border border-orange-200 rounded-lg font-bold hover:bg-orange-200 shadow-sm transition-all flex items-center justify-center gap-2 text-sm">
+            <span v-if="isProcessingCancel" class="w-4 h-4 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin"></span>
+            <span v-else>Thu hồi yêu cầu</span>
+          </button>
+        </div>
         <div v-else class="text-[11px] font-bold text-slate-500 uppercase bg-slate-50 px-3 py-1.5 rounded border border-slate-100">
           <span class="text-slate-800 ml-1">{{ phieu.trang_thai_label }}</span>
         </div>
       </div>
-
       <div v-if="showTuChoiModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
           <div class="p-5 border-b border-slate-100 bg-red-50 flex items-center gap-3">

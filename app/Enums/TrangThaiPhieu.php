@@ -26,8 +26,8 @@ enum TrangThaiPhieu: string
             self::TU_CHOI => 'Từ chối',
             self::DA_HUY => 'Đã hủy',
             self::CHO_NHAN_SU_DUYET => 'Chờ HR xử lý',
-            self::DA_HOAN_TAT => 'Hoàn tất mua sắm',
-            self::NHAN_SU_DUYET => 'Hoàn tất nghĩ phép',
+            self::DA_HOAN_TAT => 'Hoàn tất MS ',
+            self::NHAN_SU_DUYET => 'Hoàn tất NP',
         };
     }
 

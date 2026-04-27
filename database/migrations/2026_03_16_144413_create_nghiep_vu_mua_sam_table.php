@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->foreignId('phong_ban_id')->constrained('phong_ban');
 
             // Của phòng Mua sắm điền sau:
-            $table->foreignId('nha_cung_cap_id')->nullable()->constrained('nha_cung_cap')->nullOnDelete();
+            $table->foreignId('nha_cung_cap_id')->nullable()->constrained('nha_cung_cap')->restrictOnDelete();
             $table->string('file_bao_gia')->nullable();
 
             $table->string('tieu_de');
@@ -49,7 +49,7 @@ return new class extends Migration {
             $table->timestamp('thoi_gian_duyet')->useCurrent(); // Đổi tên chuẩn theo ERD
         });
 
-        // 4. GIAO DỊCH VNPAY 
+        // 4. GIAO DỊCH VNPAY
         Schema::create('giao_dich_vnpay', function (Blueprint $table) {
             $table->id();
             $table->string('ma_giao_dich_vnpay')->unique();

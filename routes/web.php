@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Khai báo tập trung toàn bộ Controller ở trên cùng cho code sạch đẹp
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PhieuYeuCauController;
@@ -12,19 +11,27 @@ use App\Http\Controllers\VnpayController;
 use App\Http\Controllers\ThanhToanController;
 use App\Http\Controllers\DanhMucController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\DirectorController;
 use App\Http\Controllers\PurchasingController;
 use App\Http\Controllers\AccountantController;
 use App\Http\Controllers\HumanResourceController;
+use App\Http\Controllers\BaiVietController;
+use App\Http\Controllers\NhaCungCapController;
+use App\Http\Controllers\PhongBanController;
+use App\Models\BaiViet;
+use App\Http\Controllers\ProfileController;
 use Inertia\Inertia;
 
 // CÔNG KHAI (Không cần đăng nhập)
-Route::inertia('/', 'Home')->name('home');
+Route::get('/', function () {
+    return Inertia::render('Welcome', [
+        'canLogin' => Route::has('login'),
+    ]);
+})->name('home');
 Route::middleware('guest')->group(function () {
-    Route::inertia('/register', 'Auth/Register')->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->name('register.store');
+    // Route::inertia('/register', 'Auth/Register')->name('register');
+    // Route::post('/register', [AuthController::class, 'register'])->name('register.store');
 
     Route::inertia('/login', 'Auth/Login')->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
@@ -71,26 +78,58 @@ Route::middleware('auth')->group(function () {
     Route::get('/phieu-yeu-cau/{id}/thanh-toan', [ThanhToanController::class, 'showQR'])->name('thanhtoan.show');
     Route::post('/phieu-yeu-cau/{id}/xac-nhan-thanh-toan', [ThanhToanController::class, 'xacNhanThanhToan'])->name('thanhtoan.xacnhan');
 
-    // MODULE: DANH MỤC & NHÂN SỰ (Admin)
-    Route::resource('danhmuc', DanhMucController::class)->only(['index', 'store', 'update', 'destroy']);
+  // Admin
+    Route::prefix('admin')->name('admin.')->group(function () {
+        // Quản lý User
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+        // Quản lý Danh mục
+        Route::get('/danh-muc', [DanhMucController::class, 'index'])->name('danhmuc.index');
+        Route::post('/danh-muc', [DanhMucController::class, 'store'])->name('danhmuc.store');
+        Route::put('/danh-muc/{id}', [DanhMucController::class, 'update'])->name('danhmuc.update');
+        Route::delete('/danh-muc/{id}', [DanhMucController::class, 'destroy'])->name('danhmuc.destroy');
+       // Quản lý Nhà cung cấp
+        Route::get('/nha-cung-cap', [NhaCungCapController::class, 'index'])->name('nhacungcap.index');
+        Route::post('/nha-cung-cap', [NhaCungCapController::class, 'store'])->name('nhacungcap.store');
+        Route::put('/nha-cung-cap/{id}', [NhaCungCapController::class, 'update'])->name('nhacungcap.update');
+        Route::delete('/nha-cung-cap/{id}', [NhaCungCapController::class, 'destroy'])->name('nhacungcap.destroy');
 
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
-    Route::get('/approvals', [ApprovalController::class, 'index'])->name('approval.center');
+        Route::get('/phong-ban', [PhongBanController::class, 'index'])->name('phongban.index');
+        Route::post('/phong-ban', [PhongBanController::class, 'store'])->name('phongban.store');
+        Route::put('/phong-ban/{id}', [PhongBanController::class, 'update'])->name('phongban.update');
+        Route::delete('/phong-ban/{id}', [PhongBanController::class, 'destroy'])->name('phongban.destroy');
+    });
 
-    // 2. Trưởng phòng
+    // Trưởng phòng
     Route::get('/manager/approvals', [ManagerController::class, 'index'])->name('manager.approvals');
 
-    // 3. Giám đốc
+    // Giám đốc
     Route::get('/director/approvals', [DirectorController::class, 'index'])->name('director.approvals');
 
-    // 4. Nhân sự
+    // Nhân sự
     Route::get('/hr/dashboard', [HumanResourceController::class, 'index'])->name('hr.index');
 
-    // 5. Mua sắm
+    // Mua sắm
     Route::get('/purchasing', [PurchasingController::class, 'index'])->name('purchasing.index');
 
-    // 6. Kế toán
+    // Kế toán
     Route::get('/accountant', [AccountantController::class, 'index'])->name('accountant.index');
+
+    // Admin
+
+    // Blog (Bài viết)
+    Route::get('/blog', [BaiVietController::class, 'index'])->name('blog.index');
+    Route::get('/blog/create', [BaiVietController::class, 'create'])->name('blog.create');
+    Route::post('/blog', [BaiVietController::class, 'store'])->name('blog.store');
+    Route::get('/blog/{slug}', [BaiVietController::class, 'show'])->name('blog.show');
+
+    Route::post('/blog/upload-image', [BaiVietController::class, 'uploadImage'])->name('blog.upload-image');
+
+    // Profile & Đổi mật khẩu
+    Route::get('/profile/change-password', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile/change-password', [ProfileController::class, 'updatePassword'])->name('profile.update');
+
 
 });

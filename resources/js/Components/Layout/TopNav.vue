@@ -14,25 +14,34 @@ const navigationMenu = computed(() => {
     const role = props.user?.vai_tro;
     let menu = [];
 
-    // Tùy theo Role mà Push đúng Menu vào
-    if (role === 'nhan_vien') {
+    // Tùy theo Role mà Push đúng Menu chính vào
+    if (role === 'admin') {
+        menu.push({ name: 'Hồ sơ Nhân sự', route: 'admin.users.index', active: 'admin.users.*' });
+        menu.push({ name: 'Danh mục', route: 'admin.danhmuc.index', active: 'admin.danhmuc.*' });
+        menu.push({ name: 'Phòng ban', route: 'admin.phongban.index', active: 'admin.phongban.*' });
+        menu.push({ name: 'Nhà cung cấp', route: 'admin.nhacungcap.index', active: 'admin.nhacungcap.*' });
+    }
+    else if (role === 'nhan_vien') {
         menu.push({ name: 'Dashboard', route: 'dashboard' });
     }
     else if (role === 'truong_phong') {
-        menu.push({ name: 'Manager', route: 'manager.approvals' });
+        menu.push({ name: 'Trưởng phòng', route: 'manager.approvals' });
     }
     else if (role === 'giam_doc') {
-        menu.push({ name: 'Director', route: 'director.approvals' });
+        menu.push({ name: 'Giám đốc', route: 'director.approvals' });
     }
     else if (role === 'nhan_su') {
-        menu.push({ name: 'Human Resources', route: 'hr.index' });
+        menu.push({ name: 'Nhân sự', route: 'hr.index' });
     }
     else if (role === 'ke_toan') {
-        menu.push({ name: 'Accountant', route: 'accountant.index' });
+        menu.push({ name: 'Kế toán', route: 'accountant.index' });
     }
     else if (role === 'nhan_vien_mua_sam') {
-        menu.push({ name: 'Purchasing', route: 'purchasing.index' });
+        menu.push({ name: 'Mua sắm', route: 'purchasing.index' });
     }
+
+    // TẤT CẢ mọi người đều có menu Bảng tin
+    menu.push({ name: 'Bảng tin', route: 'blog.index', active: 'blog.*' });
 
     return menu;
 });
@@ -54,7 +63,7 @@ const navigationMenu = computed(() => {
                             :key="item.name"
                             :href="route(item.route)"
                             class="text-sm font-semibold transition-colors duration-200 py-2 border-b-2"
-                            :class="route().current(item.route) ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-900'"
+                            :class="route().current(item.active || item.route) ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-900'"
                         >
                             {{ item.name }}
                         </Link>
@@ -112,7 +121,7 @@ const navigationMenu = computed(() => {
                     :key="'mobile-'+item.name"
                     :href="route(item.route)"
                     class="block w-full pl-4 pr-4 py-3 border-l-4 font-medium"
-                    :class="route().current(item.route) ? 'border-blue-600 text-blue-700 bg-blue-50' : 'border-transparent text-slate-600 hover:bg-slate-50'"
+                    :class="route().current(item.active || item.route) ? 'border-blue-600 text-blue-700 bg-blue-50' : 'border-transparent text-slate-600 hover:bg-slate-50'"
                 >
                     {{ item.name }}
                 </Link>
