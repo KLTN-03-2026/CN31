@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-// Bổ sung dòng use LoginRequest này:
 use App\Http\Requests\Api\LoginRequest;
+// Bổ sung dòng use LoginRequest này:
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -18,7 +18,7 @@ class AuthController extends Controller
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email hoặc mật khẩu không chính xác.'
+                'message' => 'Email hoặc mật khẩu không chính xác.',
             ], 401);
         }
 
@@ -35,7 +35,7 @@ class AuthController extends Controller
             'data' => [
                 'user' => $user,
                 'token' => $token,
-            ]
+            ],
         ], 200);
     }
 }

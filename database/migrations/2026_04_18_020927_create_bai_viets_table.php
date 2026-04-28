@@ -20,7 +20,7 @@ return new class extends Migration
 
             // Phân loại & Trạng thái
             $table->string('loai_bai_viet')->default('tin_tuc'); // tin_tuc, su_kien, noi_quy
-            $table->string('trang_thai')->default('xuat_ban'); 
+            $table->string('trang_thai')->default('xuat_ban');
 
             // Người đăng (Liên kết với bảng users)
             $table->foreignId('nguoi_dang_id')->constrained('users')->cascadeOnDelete();

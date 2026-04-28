@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PhieuYeuCau;
-use App\Models\PhongBan;
 use App\Enums\TrangThaiPhieu;
 use App\Enums\VaiTro;
-use App\Models\NhaCungCap;
+use App\Models\PhieuYeuCau;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -18,7 +16,7 @@ class DashboardController extends Controller
         $user = Auth::user();
         $vaiTro = $user->vai_tro;
         // Admin
-        if($vaiTro === VaiTro::ADMIN) {
+        if ($vaiTro === VaiTro::ADMIN) {
             return redirect()->route('admin.users.index');
         }
         // Kế Toán
@@ -30,35 +28,35 @@ class DashboardController extends Controller
             return redirect()->route('purchasing.index');
         }
         // Trưởng Phòng
-        if($vaiTro===VaiTro::TRUONG_PHONG){
+        if ($vaiTro === VaiTro::TRUONG_PHONG) {
             return redirect()->route('manager.approvals');
 
         }
         // Giám Đốc
-        if($vaiTro===VaiTro::GIAM_DOC){
+        if ($vaiTro === VaiTro::GIAM_DOC) {
             return redirect()->route('director.approvals');
-        // Nhân sự
+            // Nhân sự
         }
-        if($vaiTro === VaiTro::NHAN_SU) {
+        if ($vaiTro === VaiTro::NHAN_SU) {
             return redirect()->route('hr.index');
         }
         //   NHÂN VIÊN
         $baseQuery = PhieuYeuCau::forUserAccess($user);
 
         $stats = [
-            'total'     => (clone $baseQuery)->count(),
-            'cho_xuly'  => (clone $baseQuery)->whereIn('trang_thai', [
+            'total' => (clone $baseQuery)->count(),
+            'cho_xuly' => (clone $baseQuery)->whereIn('trang_thai', [
                 TrangThaiPhieu::CHO_TRUONG_PHONG_DUYET->value,
                 TrangThaiPhieu::CHO_GIAM_DOC_DUYET->value,
                 TrangThaiPhieu::CHO_THANH_TOAN->value,
                 TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA->value,
-                TrangThaiPhieu::CHO_NHAN_SU_DUYET->value
+                TrangThaiPhieu::CHO_NHAN_SU_DUYET->value,
             ])->count(),
             'da_thanh_toan' => (clone $baseQuery)->where('trang_thai', TrangThaiPhieu::DA_THANH_TOAN->value)->count(),
-            'hoan_tat'  => (clone $baseQuery)->where('trang_thai', TrangThaiPhieu::DA_HOAN_TAT->value)->count(),
-            'that_bai'   => (clone $baseQuery)->whereIn('trang_thai', [
+            'hoan_tat' => (clone $baseQuery)->where('trang_thai', TrangThaiPhieu::DA_HOAN_TAT->value)->count(),
+            'that_bai' => (clone $baseQuery)->whereIn('trang_thai', [
                 TrangThaiPhieu::TU_CHOI->value,
-                TrangThaiPhieu::DA_HUY->value
+                TrangThaiPhieu::DA_HUY->value,
             ])->count(),
         ];
 
@@ -66,9 +64,9 @@ class DashboardController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $tableQuery->where(function($q) use ($search) {
+            $tableQuery->where(function ($q) use ($search) {
                 $q->where('ma_phieu', 'like', "%{$search}%")
-                  ->orWhere('tieu_de', 'like', "%{$search}%");
+                    ->orWhere('tieu_de', 'like', "%{$search}%");
             });
         }
 
@@ -83,30 +81,30 @@ class DashboardController extends Controller
             ->withQueryString()
             ->through(function ($phieu) {
                 return [
-                    'id'               => $phieu->id,
-                    'ma_phieu'         => $phieu->ma_phieu,
-                    'tieu_de'          => $phieu->tieu_de,
-                    'loai_phieu'       => $phieu->loai_phieu,
-                    'nguoi_tao'        => $phieu->nguoiTao->name,
-                    'ngay_tao'         => $phieu->created_at->format('d/m/Y H:i'),
-                    'tong_tien'        => number_format($phieu->tong_tien, 0, ',', '.') . ' VNĐ',
+                    'id' => $phieu->id,
+                    'ma_phieu' => $phieu->ma_phieu,
+                    'tieu_de' => $phieu->tieu_de,
+                    'loai_phieu' => $phieu->loai_phieu,
+                    'nguoi_tao' => $phieu->nguoiTao->name,
+                    'ngay_tao' => $phieu->created_at->format('d/m/Y H:i'),
+                    'tong_tien' => number_format($phieu->tong_tien, 0, ',', '.').' VNĐ',
                     'trang_thai_label' => $phieu->trang_thai->label(),
                     'trang_thai_color' => $phieu->trang_thai->color(),
                 ];
             });
 
-        $trangThais = collect(TrangThaiPhieu::cases())->map(function($enum) {
+        $trangThais = collect(TrangThaiPhieu::cases())->map(function ($enum) {
             return [
                 'value' => $enum->value,
-                'label' => $enum->label()
+                'label' => $enum->label(),
             ];
         });
 
         return Inertia::render('Dashboard/Dashboard', [
-            'stats'          => $stats,
+            'stats' => $stats,
             'recentRequests' => $recentPhieus,
-            'filters'        => $request->only(['search', 'status']),
-            'trangThais'     => $trangThais
+            'filters' => $request->only(['search', 'status']),
+            'trangThais' => $trangThais,
         ]);
     }
 }

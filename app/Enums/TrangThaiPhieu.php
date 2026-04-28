@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Enums;
 
 enum TrangThaiPhieu: string
 {
-
     case CHO_TRUONG_PHONG_DUYET = 'cho_truong_phong_duyet';
     case CHO_MUA_SAM_BAO_GIA = 'cho_mua_sam_bao_gia';
     case CHO_GIAM_DOC_DUYET = 'cho_giam_doc_duyet';
@@ -17,7 +17,7 @@ enum TrangThaiPhieu: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::CHO_TRUONG_PHONG_DUYET => 'Chờ TP duyệt',
             self::CHO_MUA_SAM_BAO_GIA => 'Chờ báo giá',
             self::CHO_GIAM_DOC_DUYET => 'Chờ GĐ duyệt',
@@ -33,7 +33,7 @@ enum TrangThaiPhieu: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::CHO_TRUONG_PHONG_DUYET => 'yellow',
             self::CHO_MUA_SAM_BAO_GIA => 'purple',
             self::CHO_GIAM_DOC_DUYET => 'orange',
@@ -50,6 +50,6 @@ enum TrangThaiPhieu: string
 
     public static function options(): array
     {
-        return array_map(fn($case) => ['value' => $case->value, 'label' => $case->label(), 'color' => $case->color()], self::cases());
+        return array_map(fn ($case) => ['value' => $case->value, 'label' => $case->label(), 'color' => $case->color()], self::cases());
     }
 }

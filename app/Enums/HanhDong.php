@@ -18,7 +18,7 @@ enum HanhDong: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::TAO_MOI => 'Tạo mới phiếu',
             self::TRUONG_PHONG_DUYET => 'Trưởng phòng đã duyệt',
             self::GIAM_DOC_DUYET => 'Giám đốc đã duyệt',
@@ -30,12 +30,13 @@ enum HanhDong: string
             self::DA_HOAN_TAT => 'Đã hoàn tất',
             self::NHAN_HANG => 'Xác nhận đã nhận hàng',
             self::DUYET => 'Đã duyệt',
+
         };
     }
 
     public static function options(): array
     {
-        return array_map(fn($case) => [
+        return array_map(fn ($case) => [
             'value' => $case->value,
             'label' => $case->label(),
         ], self::cases());

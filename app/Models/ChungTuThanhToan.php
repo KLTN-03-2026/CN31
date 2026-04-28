@@ -10,6 +10,7 @@ class ChungTuThanhToan extends Model
     use HasFactory;
 
     protected $table = 'chung_tu_thanh_toan';
+
     protected $guarded = [];
 
     // Quan hệ với Phiếu yêu cầu

@@ -1,33 +1,41 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\NghiepVu;
 
-use Illuminate\Http\Request;
-use App\Models\PhieuYeuCau;
+use App\Enums\HanhDong;
+use App\Enums\TrangThaiPhieu;
+use App\Http\Controllers\Controller;
 use App\Models\ChiTietNghiPhep;
 use App\Models\NhatKyDuyet;
+use App\Models\PhieuYeuCau;
 use App\Models\User;
-use App\Enums\TrangThaiPhieu;
-use App\Enums\HanhDong;
-use Illuminate\Support\Facades\DB;
+use App\Notifications\PhieuYeuCauNotification;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use App\Notifications\PhieuYeuCauNotification;
 
 class NghiPhepController extends Controller
 {
+    /**
+     * Show the form for creating a new E-Leave request.
+     */
     public function create()
     {
         $usersBanGiao = User::where('phong_ban_id', Auth::user()->phong_ban_id)
-                            ->where('id', '!=', Auth::id())
-                            ->select('id', 'name')->get();
+            ->where('id', '!=', Auth::id())
+            ->select('id', 'name')
+            ->get();
 
-        return Inertia::render('NghiPhep/TaoMoi', [
-            'usersBanGiao' => $usersBanGiao
+        return Inertia::render('Modules/NghiPhep/TaoMoi', [
+            'usersBanGiao' => $usersBanGiao,
         ]);
     }
 
+    /**
+     * Store a newly created E-Leave request in storage.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -42,21 +50,20 @@ class NghiPhepController extends Controller
 
         $user = Auth::user();
 
-        if ($validated['loai_nghi_phep'] === 'nghi_phep_nam') {
-            if ($validated['so_ngay_nghi'] > $user->ngay_phep_con_lai) {
-                return back()->withErrors(['error' => 'Bạn chỉ còn ' . $user->ngay_phep_con_lai . ' ngày phép!']);
-            }
+        // Guard: Check remaining annual leave balance
+        if ($validated['loai_nghi_phep'] === 'nghi_phep_nam' && $validated['so_ngay_nghi'] > $user->ngay_phep_con_lai) {
+            return back()->withErrors(['error' => 'Bạn chỉ còn '.$user->ngay_phep_con_lai.' ngày phép!']);
         }
 
         try {
             DB::transaction(function () use ($validated, &$phieu) {
                 $phieu = PhieuYeuCau::create([
-                    'ma_phieu' => 'LV-' . strtoupper(Str::random(6)),
+                    'ma_phieu' => 'LV-'.strtoupper(Str::random(6)),
                     'loai_phieu' => 'nghi_phep',
                     'tieu_de' => $validated['tieu_de'],
                     'ly_do' => $validated['ly_do'],
                     'nguoi_tao_id' => Auth::id(),
-                    'phong_ban_id' => Auth::user()->phong_ban_id ?? null,
+                    'phong_ban_id' => Auth::user()->phong_ban_id,
                     'trang_thai' => TrangThaiPhieu::CHO_TRUONG_PHONG_DUYET,
                 ]);
 
@@ -77,15 +84,15 @@ class NghiPhepController extends Controller
                 ]);
             });
 
-            // Bắn chuông cho Trưởng phòng
-            $truongPhong = User::where('phong_ban_id', Auth::user()->phong_ban_id)->where('vai_tro', 'truong_phong')->first();
-            if ($truongPhong) {
-                $truongPhong->notify(new PhieuYeuCauNotification($phieu, Auth::user()->name . ' vừa tạo đơn xin nghỉ phép.', 'info'));
-            }
+            // Dispatch notification to Department Manager
+            User::where('phong_ban_id', Auth::user()->phong_ban_id)
+                ->where('vai_tro', 'truong_phong')
+                ->first()
+                ?->notify(new PhieuYeuCauNotification($phieu, Auth::user()->name.' vừa tạo đơn xin nghỉ phép.', 'info'));
 
             return redirect()->route('dashboard')->with('success', 'Đã gửi Đơn xin nghỉ phép!');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Lỗi hệ thống: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Lỗi hệ thống: '.$e->getMessage()]);
         }
     }
 }

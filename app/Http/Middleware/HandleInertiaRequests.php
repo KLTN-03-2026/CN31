@@ -21,7 +21,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'notifications' => $request->user() ? [
-                    'list' => $request->user()->notifications()->take(10)->get()->map(function($n) {
+                    'list' => $request->user()->notifications()->take(10)->get()->map(function ($n) {
                         return [
                             'id' => $n->id,
                             'data' => $n->data,

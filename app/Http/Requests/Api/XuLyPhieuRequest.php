@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Enums\HanhDong;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rules\Enum;
-use App\Enums\HanhDong;
 
 class XuLyPhieuRequest extends FormRequest
 {
@@ -15,6 +15,7 @@ class XuLyPhieuRequest extends FormRequest
     public function authorize(): bool
     {
         $user = $this->user();
+
         return $user->isTruongPhong() || $user->isGiamDoc();
     }
 
@@ -22,7 +23,7 @@ class XuLyPhieuRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'success' => false,
-            'message' => 'Bạn không có thẩm quyền thực hiện hành động này.'
+            'message' => 'Bạn không có thẩm quyền thực hiện hành động này.',
         ], 403));
     }
 
@@ -36,7 +37,7 @@ class XuLyPhieuRequest extends FormRequest
             'hanh_dong' => ['required', new Enum(HanhDong::class)],
 
             // 2. Chỗ này cũng dùng Enum luôn cho xịn, không gõ raw string 'tu_choi' nữa
-            'ly_do' => ['required_if:hanh_dong,' . HanhDong::TU_CHOI->value, 'nullable', 'string', 'max:255'],
+            'ly_do' => ['required_if:hanh_dong,'.HanhDong::TU_CHOI->value, 'nullable', 'string', 'max:255'],
         ];
     }
 
@@ -54,7 +55,7 @@ class XuLyPhieuRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'success' => false,
-            'message' => $validator->errors()->first()
+            'message' => $validator->errors()->first(),
         ], 422));
     }
 }

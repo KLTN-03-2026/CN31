@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\PhieuYeuCauController; // Thêm dòng use này
+use App\Http\Controllers\Api\PhieuYeuCauController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route; // Thêm dòng use này
 
 Route::post('/login', [AuthController::class, 'login']);
 

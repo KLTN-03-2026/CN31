@@ -6,11 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterRequest extends FormRequest
 {
-
     public function authorize(): bool
     {
         return true; // Cho phép tất cả mọi người truy cập vào request này
     }
+
     // Định nghĩa các hàm đăng ký và đăng nhập
     public function rules(): array
     {
@@ -22,6 +22,7 @@ class RegisterRequest extends FormRequest
             'phong_ban_id' => ['required', 'integer', 'exists:phong_ban,id'], // Kiểm tra phòng ban tồn tại trong bảng phong_ban
         ];
     }
+
     public function messages(): array
     {
         return [

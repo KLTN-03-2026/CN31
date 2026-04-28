@@ -1,30 +1,37 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\NghiepVu;
 
-use App\Models\PhieuYeuCau;
-use App\Models\ChiTietYeuCau;
-use App\Models\NhatKyDuyet;
-use App\Models\DanhMuc;
-use App\Models\User;
-use App\Enums\TrangThaiPhieu;
 use App\Enums\HanhDong;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+use App\Enums\TrangThaiPhieu;
+use App\Http\Controllers\Controller;
+use App\Models\ChiTietYeuCau;
+use App\Models\DanhMuc;
+use App\Models\NhatKyDuyet;
+use App\Models\PhieuYeuCau;
+use App\Models\User;
 use App\Notifications\PhieuYeuCauNotification;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class MuaSamController extends Controller
 {
+    /**
+     * Show the form for creating a new Purchase Request.
+     */
     public function create()
     {
         $danhMucs = DanhMuc::select('id', 'ten_danh_muc')->get();
-        return Inertia::render('PhieuYeuCau/TaoMoi', ['danhMucs' => $danhMucs]);
+
+        return Inertia::render('Modules/MuaSam/TaoMoi', ['danhMucs' => $danhMucs]);
     }
 
+    /**
+     * Store a newly created Purchase Request in storage.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -39,7 +46,7 @@ class MuaSamController extends Controller
         try {
             DB::transaction(function () use ($validated, &$phieu) {
                 $phieu = PhieuYeuCau::create([
-                    'ma_phieu' => 'PR-' . strtoupper(Str::random(6)),
+                    'ma_phieu' => 'PR-'.strtoupper(Str::random(6)),
                     'loai_phieu' => 'mua_sam',
                     'tieu_de' => $validated['tieu_de'],
                     'ly_do' => $validated['ly_do'],
@@ -49,19 +56,17 @@ class MuaSamController extends Controller
                     'trang_thai' => TrangThaiPhieu::CHO_TRUONG_PHONG_DUYET,
                 ]);
 
-                $chiTietData = [];
-                foreach ($validated['san_pham'] as $sp) {
-                    $chiTietData[] = [
-                        'phieu_yeu_cau_id' => $phieu->id,
-                        'danh_muc_id' => $sp['danh_muc_id'],
-                        'ten_san_pham' => $sp['ten_san_pham'],
-                        'so_luong' => $sp['so_luong'],
-                        'don_gia' => null,
-                        'thanh_tien' => null,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
+                $chiTietData = collect($validated['san_pham'])->map(fn ($sp) => [
+                    'phieu_yeu_cau_id' => $phieu->id,
+                    'danh_muc_id' => $sp['danh_muc_id'],
+                    'ten_san_pham' => $sp['ten_san_pham'],
+                    'so_luong' => $sp['so_luong'],
+                    'don_gia' => null,
+                    'thanh_tien' => null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ])->toArray();
+
                 ChiTietYeuCau::insert($chiTietData);
 
                 NhatKyDuyet::create([
@@ -72,25 +77,27 @@ class MuaSamController extends Controller
                 ]);
             });
 
-            // Gửi thông báo cho Trưởng phòng
+            // Dispatch notification to Department Manager
             $truongPhong = User::where('phong_ban_id', Auth::user()->phong_ban_id)->where('vai_tro', 'truong_phong')->first();
             if ($truongPhong) {
-                $truongPhong->notify(new PhieuYeuCauNotification($phieu, Auth::user()->name . ' vừa tạo yêu cầu mua sắm mới cần bạn duyệt.', 'info'));
+                $truongPhong->notify(new PhieuYeuCauNotification($phieu, Auth::user()->name.' vừa tạo yêu cầu mua sắm mới.', 'info'));
             }
 
             return redirect()->route('dashboard')->with('success', 'Đã tạo phiếu yêu cầu thành công!');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Lỗi hệ thống: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Lỗi hệ thống: '.$e->getMessage()]);
         }
     }
 
-    // Bộ phận mua sắm cập nhật báo giá và chọn nhà cung cấp
+    /**
+     * Update pricing and select supplier by Purchasing Department.
+     */
     public function capNhatBaoGia(Request $request, $id)
     {
         $phieu = PhieuYeuCau::findOrFail($id);
         $user = Auth::user();
 
-        if (!$user->isMuaSam() || $phieu->trang_thai !== TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA) {
+        if (! $user->isMuaSam() || $phieu->trang_thai !== TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA) {
             abort(403, 'Chỉ phòng Mua sắm mới được thao tác lúc này.');
         }
 
@@ -114,19 +121,16 @@ class MuaSamController extends Controller
                     }
                 }
 
-                $phieu->load('nguoiTao.phongBan');
-                $phongBan = $phieu->nguoiTao->phongBan;
-                if ($phongBan && $phongBan->ngan_sach_tong > 0) {
-                    if ($tongTien > $phongBan->ngan_sach_con_lai) {
-                        throw new \Exception('VƯỢT NGÂN SÁCH! Tổng báo giá cao hơn ngân sách khả dụng. Vui lòng thương lượng lại giá!');
-                    }
+                $phongBan = $phieu->nguoiTao->phongBan ?? null;
+                if ($phongBan && $phongBan->ngan_sach_tong > 0 && $tongTien > $phongBan->ngan_sach_con_lai) {
+                    throw new \Exception('VƯỢT NGÂN SÁCH! Tổng báo giá cao hơn ngân sách khả dụng.');
                 }
 
-                $filePath = $phieu->file_bao_gia;
-                if ($request->hasFile('file_bao_gia')) {
-                    $filePath = $request->file('file_bao_gia')->store('bao_gia', 'public');
-                }
+                $filePath = $request->hasFile('file_bao_gia')
+                    ? $request->file('file_bao_gia')->store('bao_gia', 'public')
+                    : $phieu->file_bao_gia;
 
+                // Threshold logic: >= 20M requires Director approval
                 $isVuotHanMuc = $tongTien >= 20000000;
                 $trangThaiTiepTheo = $isVuotHanMuc ? TrangThaiPhieu::CHO_GIAM_DOC_DUYET : TrangThaiPhieu::CHO_THANH_TOAN;
 
@@ -137,37 +141,31 @@ class MuaSamController extends Controller
                     'trang_thai' => $trangThaiTiepTheo,
                 ]);
 
-                $ghiChuLog = $isVuotHanMuc ? 'Phòng Mua sắm đã chốt giá (Vượt hạn mức 20tr, đã chuyển Giám đốc duyệt)' : 'Phòng Mua sắm đã chốt giá (Dưới hạn mức 20tr, chuyển Kế toán thanh toán)';
                 NhatKyDuyet::create([
                     'phieu_yeu_cau_id' => $phieu->id,
                     'nguoi_thuc_hien_id' => $user->id,
                     'hanh_dong' => HanhDong::CAP_NHAT_BAO_GIA,
-                    'ghi_chu' => $ghiChuLog,
+                    'ghi_chu' => $isVuotHanMuc ? 'Chốt giá (Vượt hạn mức, chờ Giám đốc)' : 'Chốt giá (Chuyển Kế toán thanh toán)',
                 ]);
 
-                // PHÂN LUỒNG THÔNG BÁO TỰ ĐỘNG
+                // Workflow Routing Notifications
                 if ($isVuotHanMuc) {
-                    // Báo tới Giám Đốc
-                    $giamDoc = User::where('vai_tro', 'giam_doc')->first();
-                    if ($giamDoc) $giamDoc->notify(new PhieuYeuCauNotification($phieu, 'Phòng Mua sắm vừa trình một phiếu VƯỢT HẠN MỨC (>= 20tr). Cần Sếp phê duyệt!', 'warning'));
-
-                    // Báo ngược cho Nhân viên
-                    if ($phieu->nguoiTao) $phieu->nguoiTao->notify(new PhieuYeuCauNotification($phieu, 'Phòng Mua sắm đã chốt giá. Vì vượt 20tr nên đang chờ Giám đốc duyệt.', 'info'));
+                    User::where('vai_tro', 'giam_doc')->first()?->notify(new PhieuYeuCauNotification($phieu, 'Phiếu vượt hạn mức cần phê duyệt!', 'warning'));
                 } else {
-                    // Báo tới Kế Toán
-                    $keToan = User::where('vai_tro', 'ke_toan')->first();
-                    if ($keToan) $keToan->notify(new PhieuYeuCauNotification($phieu, 'Phòng Mua sắm đã chốt giá (Dưới hạn mức). Vui lòng thực hiện thanh toán.', 'success'));
-                    // Báo ngược cho Nhân viên
-                    if ($phieu->nguoiTao) $phieu->nguoiTao->notify(new PhieuYeuCauNotification($phieu, 'Phòng Mua sắm đã chốt giá. Kế toán đang chuẩn bị thanh toán cho NCC.', 'success'));
+                    User::where('vai_tro', 'ke_toan')->first()?->notify(new PhieuYeuCauNotification($phieu, 'Chốt giá thành công. Vui lòng thanh toán.', 'success'));
                 }
+                $phieu->nguoiTao?->notify(new PhieuYeuCauNotification($phieu, 'Phòng Mua sắm đã chốt giá đơn hàng của bạn.', 'info'));
             });
 
-            return back()->with('success', 'Đã chốt giá! Hệ thống tự động phân luồng phê duyệt thành công.');
+            return back()->with('success', 'Đã chốt giá! Hệ thống phân luồng phê duyệt thành công.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
 
+    /**
+     * Confirm receipt of goods by the original requester.
+     */
     public function xacNhanNhanHang(Request $request, $id)
     {
         $phieu = PhieuYeuCau::findOrFail($id);
@@ -181,40 +179,30 @@ class MuaSamController extends Controller
             'ghi_chu_nhan_hang' => 'nullable|string|max:1000',
         ]);
 
-        $path = null;
-        if ($request->hasFile('file_nhan_hang')) {
-            $path = $request->file('file_nhan_hang')->store('chung_tu_nhan_hang', 'public');
-        }
-
         try {
-            DB::transaction(function () use ($phieu, $path, $request) {
+            DB::transaction(function () use ($phieu, $request) {
+                $path = $request->file('file_nhan_hang')->store('chung_tu_nhan_hang', 'public');
+
                 $phieu->update([
                     'trang_thai' => TrangThaiPhieu::DA_HOAN_TAT,
                     'file_nhan_hang' => $path,
                     'ghi_chu_nhan_hang' => $request->ghi_chu_nhan_hang,
                 ]);
 
-            NhatKyDuyet::create([
+                NhatKyDuyet::create([
                     'phieu_yeu_cau_id' => $phieu->id,
                     'nguoi_thuc_hien_id' => Auth::id(),
-                    'hanh_dong' => \App\Enums\HanhDong::DA_HOAN_TAT ?? \App\Enums\HanhDong::NHAN_HANG,
+                    'hanh_dong' => HanhDong::DA_HOAN_TAT ?? HanhDong::NHAN_HANG,
                     'ghi_chu' => 'Người yêu cầu đã nghiệm thu và xác nhận nhận đủ hàng.',
                 ]);
-                $keToan = User::where('vai_tro', 'ke_toan')->first();
-                if ($keToan) {
-                    $keToan->notify(new PhieuYeuCauNotification($phieu, 'Người yêu cầu đã nghiệm thu hàng hóa thành công. Chu trình hoàn tất!', 'success'));
-                }
 
-                // Báo cho Mua sắm đóng KPI
-                $muaSam = User::where('vai_tro', 'nhan_vien_mua_sam')->first();
-                if ($muaSam) {
-                    $muaSam->notify(new PhieuYeuCauNotification($phieu, 'Đơn hàng do bạn phụ trách đã được giao và nghiệm thu thành công.', 'success'));
-                }
+                User::where('vai_tro', 'ke_toan')->first()?->notify(new PhieuYeuCauNotification($phieu, 'Người yêu cầu đã nghiệm thu hàng hóa.', 'success'));
+                User::where('vai_tro', 'nhan_vien_mua_sam')->first()?->notify(new PhieuYeuCauNotification($phieu, 'Đơn hàng do bạn phụ trách đã được nghiệm thu.', 'success'));
             });
 
             return back()->with('success', 'Nghiệm thu thành công! Quy trình mua sắm khép kín.');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Lỗi hệ thống: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Lỗi hệ thống: '.$e->getMessage()]);
         }
     }
 }

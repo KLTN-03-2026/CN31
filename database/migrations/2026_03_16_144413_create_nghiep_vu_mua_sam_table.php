@@ -4,8 +4,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    public function up(): void {
+return new class extends Migration
+{
+    public function up(): void
+    {
         // 1. PHIẾU YÊU CẦU
         Schema::create('phieu_yeu_cau', function (Blueprint $table) {
             $table->id();
@@ -64,7 +66,8 @@ return new class extends Migration {
         });
     }
 
-    public function down(): void {
+    public function down(): void
+    {
         Schema::dropIfExists('giao_dich_vnpay');
         Schema::dropIfExists('nhat_ky_duyet');
         Schema::dropIfExists('chi_tiet_yeu_cau');

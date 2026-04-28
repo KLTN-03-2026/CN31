@@ -1,12 +1,12 @@
 <?php
 
-
 namespace Database\Seeders;
-use App\Models\User;
-use App\Models\PhongBan;
+
+use App\Enums\VaiTro;
 use App\Models\DanhMuc;
 use App\Models\NhaCungCap;
-use App\Enums\VaiTro;
+use App\Models\PhongBan;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 

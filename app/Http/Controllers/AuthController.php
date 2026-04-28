@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
-use Inertia\Inertia;
-
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-
     // public function register(RegisterRequest $request): RedirectResponse
     // {
 
@@ -47,8 +44,9 @@ class AuthController extends Controller
             }
 
             $request->session()->regenerate();
+
             return redirect()->intended(route('dashboard'))
-                             ->with('success', 'Chào mừng bạn quay lại hệ thống!');
+                ->with('success', 'Chào mừng bạn quay lại hệ thống!');
         }
 
         return back()->withErrors([

@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\URL; // Thêm dòng này
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider; // Thêm dòng này
 
 class AppServiceProvider extends ServiceProvider
 {

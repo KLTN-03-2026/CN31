@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\PhieuYeuCau;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use App\Http\Requests\Api\XuLyPhieuRequest;
-use Illuminate\Support\Facades\DB;
-use App\Models\NhatKyDuyet;
-use App\Notifications\PhieuYeuCauNotification;
 use App\Enums\HanhDong;
 use App\Enums\TrangThaiPhieu;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\XuLyPhieuRequest;
+use App\Models\NhatKyDuyet;
+use App\Models\PhieuYeuCau;
+use App\Notifications\PhieuYeuCauNotification;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PhieuYeuCauController extends Controller
 {
@@ -26,7 +26,7 @@ class PhieuYeuCauController extends Controller
 
         if ($user->isTruongPhong()) {
             $query->where('phong_ban_id', $user->phong_ban_id)
-                  ->where('trang_thai', TrangThaiPhieu::CHO_TRUONG_PHONG_DUYET);
+                ->where('trang_thai', TrangThaiPhieu::CHO_TRUONG_PHONG_DUYET);
         } elseif ($user->isGiamDoc()) {
             $query->where('trang_thai', TrangThaiPhieu::CHO_GIAM_DOC_DUYET);
         } else {
@@ -36,23 +36,24 @@ class PhieuYeuCauController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Lấy danh sách thành công.',
-            'data' => $query->get()
+            'data' => $query->get(),
         ], 200);
     }
 
-  // 2. API LẤY CHI TIẾT 1 PHIẾU (Dành cho màn hình chi tiết khi Sếp bấm vào)
+    // 2. API LẤY CHI TIẾT 1 PHIẾU (Dành cho màn hình chi tiết khi Sếp bấm vào)
     public function show($id): JsonResponse
     {
         $phieu = PhieuYeuCau::with([
             'nguoiTao:id,name',
             'nhatKy' => function ($query) {
                 $query->with('nguoiThucHien:id,name')->orderBy('thoi_gian_duyet', 'desc');
-            }
+            },
         ])->findOrFail($id);
 
         // --- Nếu là phiếu nghỉ phép ---
         if ($phieu->loai_phieu === 'nghi_phep') {
             $phieu->load('chiTietNghiPhep');
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -65,10 +66,10 @@ class PhieuYeuCauController extends Controller
                     'trang_thai_label' => $phieu->trang_thai->label(),
                     'trang_thai_color' => $phieu->trang_thai->color(),
                     'chi_tiet_nghi_phep' => $phieu->chiTietNghiPhep ? [
-                        'so_ngay_nghi' => $phieu->chiTietNghiPhep->so_ngay_nghi . ' ngày',
-                        'thoi_gian' => $phieu->chiTietNghiPhep->ngay_bat_dau->format('d/m/Y') . ' - ' . $phieu->chiTietNghiPhep->ngay_ket_thuc->format('d/m/Y'),
+                        'so_ngay_nghi' => $phieu->chiTietNghiPhep->so_ngay_nghi.' ngày',
+                        'thoi_gian' => $phieu->chiTietNghiPhep->ngay_bat_dau->format('d/m/Y').' - '.$phieu->chiTietNghiPhep->ngay_ket_thuc->format('d/m/Y'),
                     ] : null,
-                ]
+                ],
             ], 200);
         }
 
@@ -83,28 +84,28 @@ class PhieuYeuCauController extends Controller
                 'ma_phieu' => $phieu->ma_phieu,
                 'tieu_de' => $phieu->tieu_de,
                 'ly_do' => $phieu->ly_do,
-                'tong_tien' => number_format($phieu->tong_tien ?: 0, 0, ',', '.') . ' VNĐ',
+                'tong_tien' => number_format($phieu->tong_tien ?: 0, 0, ',', '.').' VNĐ',
                 'nguoi_tao' => $phieu->nguoiTao->name,
                 'ngay_tao' => $phieu->created_at->format('d/m/Y H:i'),
                 'trang_thai_label' => $phieu->trang_thai->label(),
                 'trang_thai_color' => $phieu->trang_thai->color(),
-                'file_bao_gia_url' => $phieu->file_bao_gia ? asset('storage/' . $phieu->file_bao_gia) : null,
+                'file_bao_gia_url' => $phieu->file_bao_gia ? asset('storage/'.$phieu->file_bao_gia) : null,
 
                 // SỬA Ở ĐÂY: Map đúng tên cột trong Migration của bạn
-                'danh_sach_vat_tu' => $phieu->chiTiet->map(fn($item) => [
+                'danh_sach_vat_tu' => $phieu->chiTiet->map(fn ($item) => [
                     'ten' => $item->ten_san_pham, // Trực tiếp lấy từ bảng chi_tiet_yeu_cau
                     'danh_muc' => $item->danhMuc ? $item->danhMuc->ten_danh_muc : 'Khác',
                     'so_luong' => $item->so_luong, // Đã xóa don_vi_tinh vì DB không có
-                    'thanh_tien' => number_format($item->thanh_tien ?: 0, 0, ',', '.')
+                    'thanh_tien' => number_format($item->thanh_tien ?: 0, 0, ',', '.'),
                 ]),
 
                 'tong_so_lich_su' => $phieu->nhatKy->count(),
-                'lich_su_duyet_preview' => $phieu->nhatKy->take(3)->map(fn($log) => [
+                'lich_su_duyet_preview' => $phieu->nhatKy->take(3)->map(fn ($log) => [
                     'nguoi_duyet' => $log->nguoiThucHien ? $log->nguoiThucHien->name : 'Hệ thống',
                     'hanh_dong' => $log->hanh_dong->label(),
-                    'thoi_gian' => \Carbon\Carbon::parse($log->thoi_gian_duyet)->format('H:i d/m')
-                ])
-            ]
+                    'thoi_gian' => \Carbon\Carbon::parse($log->thoi_gian_duyet)->format('H:i d/m'),
+                ]),
+            ],
         ], 200);
     }
 
@@ -114,7 +115,7 @@ class PhieuYeuCauController extends Controller
         $user = $request->user();
         $phieu = PhieuYeuCau::find($id);
 
-        if (!$phieu) {
+        if (! $phieu) {
             return response()->json(['success' => false, 'message' => 'Không tìm thấy phiếu yêu cầu.'], 404);
         }
 
@@ -162,6 +163,7 @@ class PhieuYeuCauController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['success' => false, 'message' => 'Đã xảy ra lỗi trong quá trình xử lý.', 'error' => $e->getMessage()], 500);
         }
     }

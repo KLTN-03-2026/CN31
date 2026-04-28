@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 class PhieuYeuCau extends Model
 {
     protected $table = 'phieu_yeu_cau';
-    protected $guarded = [];
 
+    protected $guarded = [];
 
     protected function casts(): array
     {
@@ -39,16 +39,16 @@ class PhieuYeuCau extends Model
         if ($user->isMuaSam()) {
             return $query->where('trang_thai', [
                 TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA,
-                ]);
+            ]);
         }
 
         // 4. Trưởng phòng: Lọc ra các phiếu thuộc phòng ban của mình
         if ($user->isTruongPhong()) {
             return $query->where('phong_ban_id', $user->phong_ban_id)
-                        ->where('trang_thai', TrangThaiPhieu::CHO_TRUONG_PHONG_DUYET);
+                ->where('trang_thai', TrangThaiPhieu::CHO_TRUONG_PHONG_DUYET);
 
         }
-        //5. Nhân sự (HR): Chỉ thấy phiếu nghỉ phép đang chờ duyệt hoặc đã hoàn tất, từ chối, hủy
+        // 5. Nhân sự (HR): Chỉ thấy phiếu nghỉ phép đang chờ duyệt hoặc đã hoàn tất, từ chối, hủy
         if ($user->isNhanSu()) {
             return $query->where('loai_phieu', '=', 'nghi_phep')
                 ->whereIn('trang_thai', [
@@ -68,30 +68,37 @@ class PhieuYeuCau extends Model
     {
         return $this->belongsTo(User::class, 'nguoi_tao_id');
     }
+
     public function phongBan()
     {
         return $this->belongsTo(PhongBan::class, 'phong_ban_id');
     }
+
     public function chiTiet()
     {
         return $this->hasMany(ChiTietYeuCau::class, 'phieu_yeu_cau_id');
     }
+
     public function nhatKy()
     {
         return $this->hasMany(NhatKyDuyet::class, 'phieu_yeu_cau_id');
     }
+
     public function giaoDich()
     {
         return $this->hasMany(GiaoDichVnpay::class, 'phieu_yeu_cau_id');
     }
+
     public function nhaCungCap()
     {
         return $this->belongsTo(NhaCungCap::class, 'nha_cung_cap_id');
     }
+
     public function chiTietNghiPhep()
     {
         return $this->hasOne(ChiTietNghiPhep::class, 'phieu_yeu_cau_id');
     }
+
     public function chungTuThanhToan()
     {
         return $this->hasOne(ChungTuThanhToan::class, 'phieu_yeu_cau_id');

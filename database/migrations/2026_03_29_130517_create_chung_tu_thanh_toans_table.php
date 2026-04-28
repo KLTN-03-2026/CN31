@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-public function up(): void
+    public function up(): void
     {
         Schema::create('chung_tu_thanh_toan', function (Blueprint $table) {
             $table->id();

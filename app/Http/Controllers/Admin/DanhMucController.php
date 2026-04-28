@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\DanhMuc;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,9 @@ class DanhMucController extends Controller
     // HIỂN THỊ & TÌM KIẾM
     public function index(Request $request)
     {
-        if (!Auth::user()->isAdmin()) abort(403);
+        if (! Auth::user()->isAdmin()) {
+            abort(403);
+        }
 
         $query = DanhMuc::orderBy('created_at', 'desc');
 
@@ -25,20 +28,22 @@ class DanhMucController extends Controller
 
         return Inertia::render('Admin/DanhMuc/Index', [
             'danhMucs' => $danhMucs,
-            'filters' => $request->only('search')
+            'filters' => $request->only('search'),
         ]);
     }
 
     // THÊM MỚI
     public function store(Request $request)
     {
-        if (!Auth::user()->isAdmin()) abort(403);
+        if (! Auth::user()->isAdmin()) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'ten_danh_muc' => 'required|string|max:255|unique:danh_muc,ten_danh_muc',
             'mo_ta' => 'nullable|string',
         ], [
-            'ten_danh_muc.unique' => 'Tên danh mục này đã tồn tại trong hệ thống.'
+            'ten_danh_muc.unique' => 'Tên danh mục này đã tồn tại trong hệ thống.',
         ]);
 
         DanhMuc::create($validated);
@@ -49,12 +54,14 @@ class DanhMucController extends Controller
     // CẬP NHẬT
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->isAdmin()) abort(403);
+        if (! Auth::user()->isAdmin()) {
+            abort(403);
+        }
 
         $danhMuc = DanhMuc::findOrFail($id);
 
         $validated = $request->validate([
-            'ten_danh_muc' => 'required|string|max:255|unique:danh_muc,ten_danh_muc,' . $id,
+            'ten_danh_muc' => 'required|string|max:255|unique:danh_muc,ten_danh_muc,'.$id,
             'mo_ta' => 'nullable|string',
         ]);
 
@@ -66,12 +73,15 @@ class DanhMucController extends Controller
     // XÓA
     public function destroy($id)
     {
-        if (!Auth::user()->isAdmin()) abort(403);
+        if (! Auth::user()->isAdmin()) {
+            abort(403);
+        }
 
         $danhMuc = DanhMuc::findOrFail($id);
 
         try {
             $danhMuc->delete();
+
             return back()->with('success', 'Đã xóa danh mục.');
         } catch (\Exception $e) {
             // Nếu bảng PhieuYeuCau có foreign key trỏ tới danh_muc_id, Laravel sẽ throw Exception khi cố xóa

@@ -1,18 +1,21 @@
 <?php
 
 namespace App\Notifications;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 
-class PhieuYeuCauNotification extends Notification implements ShouldQueue, ShouldBroadcast
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
+use Illuminate\Notifications\Notification;
+
+class PhieuYeuCauNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
     public $phieu;
+
     public $thongDiep;
+
     public $loai;
 
     public function __construct($phieu, $thongDiep, $loai = 'info')
