@@ -1,18 +1,22 @@
 <?php
 
-namespace App\Notifications; 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\BroadcastMessage;
+namespace App\Notifications;
 
-class PhieuYeuCauNotification extends Notification
+use App\Mail\ThongBaoPhieuMail;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
+use Illuminate\Notifications\Notification;
+
+class PhieuYeuCauNotification extends Notification implements ShouldBroadcast, ShouldQueue
 {
     use Queueable;
 
     public $phieu;
+
     public $thongDiep;
+
     public $loai;
 
     public function __construct($phieu, $thongDiep, $loai = 'info')
@@ -22,9 +26,19 @@ class PhieuYeuCauNotification extends Notification
         $this->loai = $loai;
     }
 
+    // 1. Khai báo thêm 'mail' vào kênh gửi thông báo
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', 'mail'];
+    }
+
+    // 2. hàm toMail để khởi tạo bức thư và gửi đi
+    public function toMail(object $notifiable)
+    {
+        $tieuDe = 'Thông báo từ hệ thống: '.$this->phieu->ma_phieu;
+
+        return (new ThongBaoPhieuMail($this->phieu, $tieuDe, $this->thongDiep))
+            ->to($notifiable->email);
     }
 
     public function toDatabase(object $notifiable): array
@@ -32,10 +46,8 @@ class PhieuYeuCauNotification extends Notification
         return [
             'phieu_id' => $this->phieu->id,
             'ma_phieu' => $this->phieu->ma_phieu,
-            'tieu_de' => $this->phieu->tieu_de,
             'thong_diep' => $this->thongDiep,
             'loai' => $this->loai,
-            'nguoi_gui' => auth()->check() ? auth()->user()->name : 'Hệ thống',
         ];
     }
 
@@ -47,6 +59,7 @@ class PhieuYeuCauNotification extends Notification
             'thong_diep' => $this->thongDiep,
             'loai' => $this->loai,
             'created_at' => now()->toIso8601String(),
+            'created_at_label' => 'Vừa xong',
         ]);
     }
 }

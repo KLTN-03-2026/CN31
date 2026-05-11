@@ -1,0 +1,61 @@
+
+  GET|HEAD  / ................................................................................................... home
+  GET|HEAD  accountant ................................. accountant.index › Workspaces\KeToanWorkspaceController@index
+  GET|HEAD  admin/danh-muc ....................................... admin.danhmuc.index › Admin\DanhMucController@index
+  POST      admin/danh-muc ....................................... admin.danhmuc.store › Admin\DanhMucController@store
+  PUT       admin/danh-muc/{id} ................................ admin.danhmuc.update › Admin\DanhMucController@update
+  DELETE    admin/danh-muc/{id} .............................. admin.danhmuc.destroy › Admin\DanhMucController@destroy
+  GET|HEAD  admin/nha-cung-cap ............................. admin.nhacungcap.index › Admin\NhaCungCapController@index
+  POST      admin/nha-cung-cap ............................. admin.nhacungcap.store › Admin\NhaCungCapController@store
+  PUT       admin/nha-cung-cap/{id} ...................... admin.nhacungcap.update › Admin\NhaCungCapController@update
+  DELETE    admin/nha-cung-cap/{id} .................... admin.nhacungcap.destroy › Admin\NhaCungCapController@destroy
+  GET|HEAD  admin/phong-ban .................................... admin.phongban.index › Admin\PhongBanController@index
+  POST      admin/phong-ban .................................... admin.phongban.store › Admin\PhongBanController@store
+  PUT       admin/phong-ban/{id} ............................. admin.phongban.update › Admin\PhongBanController@update
+  DELETE    admin/phong-ban/{id} ........................... admin.phongban.destroy › Admin\PhongBanController@destroy
+  GET|HEAD  admin/users ............................................... admin.users.index › Admin\UserController@index
+  POST      admin/users ............................................... admin.users.store › Admin\UserController@store
+  PUT       admin/users/{id} ........................................ admin.users.update › Admin\UserController@update
+  DELETE    admin/users/{id} ...................................... admin.users.destroy › Admin\UserController@destroy
+  POST      api/login ....................................................................... Api\AuthController@login
+  GET|HEAD  api/phieu-yeu-cau/cho-duyet ................................... Api\PhieuYeuCauController@danhSachChoDuyet
+  GET|HEAD  api/phieu-yeu-cau/{id} .................................................... Api\PhieuYeuCauController@show
+  POST      api/phieu-yeu-cau/{id}/xu-ly .............................................. Api\PhieuYeuCauController@xuLy
+  GET|HEAD  api/user ................................................................................................. 
+  GET|HEAD  blog ................................................................ blog.index › BaiVietController@index
+  POST      blog ................................................................ blog.store › BaiVietController@store
+  GET|HEAD  blog/create ....................................................... blog.create › BaiVietController@create
+  POST      blog/upload-image ...................................... blog.upload-image › BaiVietController@uploadImage
+  GET|HEAD  blog/{slug} ........................................................... blog.show › BaiVietController@show
+  GET|POST|HEAD broadcasting/auth ......................... Illuminate\Broadcasting › BroadcastController@authenticate
+  GET|HEAD  dashboard .......................................................... dashboard › DashboardController@index
+  GET|HEAD  director/approvals ...................... director.approvals › Workspaces\GiamDocWorkspaceController@index
+  GET|HEAD  hr/dashboard ....................................... hr.index › Workspaces\NhanSuWorkspaceController@index
+  GET|HEAD  login ............................................................ login › Inertia\Controller › Controller
+  POST      login ................................................................. login.store › AuthController@login
+  POST      logout .................................................................... logout › AuthController@logout
+  GET|HEAD  manager/approvals .................... manager.approvals › Workspaces\TruongPhongWorkspaceController@index
+  POST      nghi-phep ............................................. nghiphep.store › NghiepVu\NghiPhepController@store
+  GET|HEAD  nghi-phep/tao-moi ................................... nghiphep.create › NghiepVu\NghiPhepController@create
+  POST      notifications/{id}/read ....... notifications.read › NghiepVu\PhieuYeuCauController@markNotificationAsRead
+  GET|HEAD  phieu-yeu-cau ............................................ phieu.create › NghiepVu\MuaSamController@create
+  POST      phieu-yeu-cau .............................................. phieu.store › NghiepVu\MuaSamController@store
+  GET|HEAD  phieu-yeu-cau/{id} ...................................... phieu.show › NghiepVu\PhieuYeuCauController@show
+  POST      phieu-yeu-cau/{id}/bao-gia ....................... phieu.bao_gia › NghiepVu\MuaSamController@capNhatBaoGia
+  POST      phieu-yeu-cau/{id}/duyet ............................ phieu.duyet › NghiepVu\PhieuYeuCauController@approve
+  POST      phieu-yeu-cau/{id}/huy .............................. phieu.cancel › NghiepVu\PhieuYeuCauController@cancel
+  GET|HEAD  phieu-yeu-cau/{id}/in ................................. phieu.print › NghiepVu\PhieuYeuCauController@print
+  POST      phieu-yeu-cau/{id}/nhan-hang ................. phieu.nhan_hang › NghiepVu\MuaSamController@xacNhanNhanHang
+  GET|HEAD  phieu-yeu-cau/{id}/thanh-toan ....................... thanhtoan.show › TaiChinh\ThanhToanController@showQR
+  POST      phieu-yeu-cau/{id}/vnpay ........................... vnpay.create › TaiChinh\VnpayController@createPayment
+  POST      phieu-yeu-cau/{id}/xac-nhan-thanh-toan . thanhtoan.xacnhan › TaiChinh\ThanhToanController@xacNhanThanhToan
+  GET|HEAD  profile/change-password ............................................ profile.edit › ProfileController@edit
+  PUT       profile/change-password ................................ profile.update › ProfileController@updatePassword
+  GET|HEAD  purchasing ................................. purchasing.index › Workspaces\MuaSamWorkspaceController@index
+  GET|HEAD  sanctum/csrf-cookie .................... sanctum.csrf-cookie › Laravel\Sanctum › CsrfCookieController@show
+  GET|HEAD  storage/{path} ............................................................................. storage.local
+  GET|HEAD  up ....................................................................................................... 
+  GET|HEAD  vnpay-return ......................................... vnpay.return › TaiChinh\VnpayController@vnpayReturn
+
+                                                                                                   Showing [57] routes
+

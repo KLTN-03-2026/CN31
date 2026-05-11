@@ -2,63 +2,58 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
-    // Đổi tên thành chữ thường: register
-    public function register(Request $request): RedirectResponse
+    // public function register(RegisterRequest $request): RedirectResponse
+    // {
+
+    //     $fields = $request->validated();
+
+    //     if ($request->hasFile('avatar')) {
+    //         $fields['avatar'] = $request->file('avatar')->store('avatars', 'public');
+    //     }
+
+    //     $user = User::create($fields);
+    //     Auth::login($user);
+
+    //     // Tối ưu: Dùng to_route() ngắn gọn hơn redirect()->route()
+    //     return to_route('dashboard')->with('success', 'Đăng ký tài khoản thành công!');
+    // }
+
+    public function login(LoginRequest $request): RedirectResponse
     {
-        // 1. Validate chặt chẽ
-        $fields = $request->validate([
-            'avatar'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,avif', 'max:5048'],
-            'name'          => ['required', 'string', 'max:255'],
-            'email'         => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password'      => ['required', 'confirmed', 'min:8'],
-            'phong_ban_id'  => ['required', 'exists:phong_ban,id']
-             ]);
+        $credentials = $request->validated();
 
-        // 2. Upload Avatar (Tối ưu dùng $request->file thay vì $request->avatar)
-        if ($request->hasFile('avatar')) {
-            $fields['avatar'] = $request->file('avatar')->store('avatars', 'public');
-        }
-
-        $user = User::create($fields);
-        Auth::login($user);
-
-        // Tối ưu: Dùng to_route() ngắn gọn hơn redirect()->route()
-        return to_route('dashboard')->with('success', 'Đăng ký tài khoản thành công!');
-    }
-
-    // Đổi tên thành chữ thường: login
-    public function login(Request $request): RedirectResponse
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required']
-        ]);
-
-        // Tối ưu: Ép kiểu boolean cho nút Remember Me an toàn hơn
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            // Chống tấn công Session Fixation
+
+            if (Auth::user()->trang_thai == false) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Tài khoản của bạn đã bị vô hiệu hóa (Đã nghỉ việc). Vui lòng liên hệ Admin.',
+                ])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
 
-            // intended() giúp chuyển hướng về trang cũ nếu trước đó user bị văng ra
             return redirect()->intended(route('dashboard'))
-                             ->with('success', 'Chào mừng bạn quay lại hệ thống!');
+                ->with('success', 'Chào mừng bạn quay lại hệ thống!');
         }
 
-        // UX: Trả về lỗi kèm theo email đã nhập để user không phải gõ lại
         return back()->withErrors([
             'password' => 'Email hoặc mật khẩu không chính xác.',
         ])->onlyInput('email');
     }
 
-    // Đổi tên thành chữ thường: logout
     public function logout(Request $request): RedirectResponse
     {
 

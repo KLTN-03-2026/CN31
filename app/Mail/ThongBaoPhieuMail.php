@@ -12,7 +12,9 @@ class ThongBaoPhieuMail extends Mailable
     use Queueable, SerializesModels;
 
     public $phieu;
+
     public $tieuDe;
+
     public $loiNhan;
 
     // Nhận dữ liệu truyền vào khi gọi gửi Email
@@ -27,6 +29,6 @@ class ThongBaoPhieuMail extends Mailable
     public function build()
     {
         return $this->subject($this->tieuDe)
-                    ->view('emails.thong_bao_phieu'); // Chỏ tới file giao diện Blade
+            ->view('emails.thong_bao_phieu'); // Chỏ tới file giao diện Blade
     }
 }

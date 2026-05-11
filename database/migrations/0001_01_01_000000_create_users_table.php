@@ -12,7 +12,6 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
 
-            // SƯỚNG NHẤT LÀ ĐÂY: Vì phong_ban chạy trước nên giờ ta nối thẳng khóa ngoại luôn!
             $table->foreignId('phong_ban_id')->nullable()->constrained('phong_ban')->nullOnDelete();
 
             $table->string('name');
@@ -26,7 +25,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 2. GIẢI QUYẾT TRƯỞNG PHÒNG: Giờ cả 2 bảng đã ra đời, ta móc khóa ngoại cho cột truong_phong_id lúc nãy
         Schema::table('phong_ban', function (Blueprint $table) {
             $table->foreign('truong_phong_id')->references('id')->on('users')->nullOnDelete();
         });

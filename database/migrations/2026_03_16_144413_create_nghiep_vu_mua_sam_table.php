@@ -4,8 +4,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    public function up(): void {
+return new class extends Migration
+{
+    public function up(): void
+    {
         // 1. PHIẾU YÊU CẦU
         Schema::create('phieu_yeu_cau', function (Blueprint $table) {
             $table->id();
@@ -15,12 +17,12 @@ return new class extends Migration {
             $table->foreignId('phong_ban_id')->constrained('phong_ban');
 
             // Của phòng Mua sắm điền sau:
-            $table->foreignId('nha_cung_cap_id')->nullable()->constrained('nha_cung_cap')->nullOnDelete();
+            $table->foreignId('nha_cung_cap_id')->nullable()->constrained('nha_cung_cap')->restrictOnDelete();
             $table->string('file_bao_gia')->nullable();
 
             $table->string('tieu_de');
             $table->text('ly_do')->nullable();
-            $table->decimal('tong_tien', 15, 0)->nullable(); // Nullable vì NV tạo phiếu không biết giá
+            $table->decimal('tong_tien', 15, 0)->nullable(); 
             $table->string('trang_thai')->default('nhap');
             $table->timestamps();
         });
@@ -46,10 +48,10 @@ return new class extends Migration {
             $table->foreignId('nguoi_thuc_hien_id')->constrained('users');
             $table->string('hanh_dong');
             $table->text('ghi_chu')->nullable();
-            $table->timestamp('thoi_gian_duyet')->useCurrent(); // Đổi tên chuẩn theo ERD
+            $table->timestamp('thoi_gian_duyet')->useCurrent();
         });
 
-        // 4. GIAO DỊCH VNPAY (MỚI)
+        // 4. GIAO DỊCH VNPAY
         Schema::create('giao_dich_vnpay', function (Blueprint $table) {
             $table->id();
             $table->string('ma_giao_dich_vnpay')->unique();
@@ -64,7 +66,8 @@ return new class extends Migration {
         });
     }
 
-    public function down(): void {
+    public function down(): void
+    {
         Schema::dropIfExists('giao_dich_vnpay');
         Schema::dropIfExists('nhat_ky_duyet');
         Schema::dropIfExists('chi_tiet_yeu_cau');

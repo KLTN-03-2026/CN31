@@ -1,95 +1,197 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
-// Khai báo tập trung toàn bộ Controller ở trên cùng cho code sạch đẹp
+// Middleware & Enums
+use App\Http\Middleware\CheckRole;
+use App\Enums\VaiTro;
+
+// Core & Auth
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\PhieuYeuCauController;
-use App\Http\Controllers\MuaSamController;
-use App\Http\Controllers\NghiPhepController;
-use App\Http\Controllers\VnpayController;
-use App\Http\Controllers\ThanhToanController;
-use App\Http\Controllers\DanhMucController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileController;
+
+// Business (Nghiệp vụ)
+use App\Http\Controllers\NghiepVu\MuaSamController;
+use App\Http\Controllers\NghiepVu\PhieuYeuCauController;
+use App\Http\Controllers\NghiepVu\NghiPhepController;
+use App\Http\Controllers\BaiVietController;
+
+// Finance (Tài chính)
+use App\Http\Controllers\TaiChinh\ThanhToanController;
+use App\Http\Controllers\TaiChinh\VnpayController;
+
+// Admin (Master Data)
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\DanhMucController;
+use App\Http\Controllers\Admin\NhaCungCapController;
+use App\Http\Controllers\Admin\PhongBanController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\PhieuAdminController;
+
+// Workspaces (Dashboards)
+use App\Http\Controllers\Workspaces\TruongPhongWorkspaceController;
+use App\Http\Controllers\Workspaces\GiamDocWorkspaceController;
+use App\Http\Controllers\Workspaces\MuaSamWorkspaceController;
+use App\Http\Controllers\Workspaces\KeToanWorkspaceController;
+use App\Http\Controllers\Workspaces\NhanSuWorkspaceController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
-
-// ==========================================
-// ROUTE CÔNG KHAI (Không cần đăng nhập)
-// ==========================================
-Route::inertia('/', 'Home')->name('home');
-Route::inertia('/Page-Test', 'Page-Test')->name('home-test');
+Route::get('/', fn () => Inertia::render('Public/Welcome', ['canLogin' => Route::has('login')]))->name('home');
 
 Route::middleware('guest')->group(function () {
-    Route::inertia('/register', 'Auth/Register')->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->name('register.store');
-
     Route::inertia('/login', 'Auth/Login')->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
 });
 
-// ==========================================
-// ROUTE HỆ THỐNG (Bắt buộc đăng nhập)
-// ==========================================
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATED ROUTES
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth')->group(function () {
 
-    // 1. Dashboard & Đăng xuất
+    // --- COMMON & PROFILE ---
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    
-    // API đánh dấu đã đọc thông báo
     Route::post('/notifications/{id}/read', [PhieuYeuCauController::class, 'markNotificationAsRead'])->name('notifications.read');
 
-    // ==========================================
-    // MODULE: MUA SẮM (Tài sản / Thiết bị)
-    // ==========================================
-    Route::prefix('phieu-yeu-cau')->group(function () {
-        Route::get('/', [MuaSamController::class, 'create'])->name('phieu.create');
-        Route::post('/', [MuaSamController::class, 'store'])->name('phieu.store');
-        Route::post('/{id}/bao-gia', [MuaSamController::class, 'capNhatBaoGia'])->name('phieu.bao_gia');
-        Route::post('/{id}/nhan-hang', [MuaSamController::class, 'xacNhanNhanHang'])->name('phieu.nhan_hang');
+    Route::controller(ProfileController::class)->prefix('profile')->name('profile.')->group(function () {
+        Route::get('/change-password', 'edit')->name('edit');
+        Route::put('/change-password', 'updatePassword')->name('update');
     });
 
-    // ==========================================
-    // MODULE: NGHỈ PHÉP (E-Leave)
-    // ==========================================
-    Route::prefix('nghi-phep')->group(function () {
-        Route::get('/tao-moi', [NghiPhepController::class, 'create'])->name('nghiphep.create');
-        Route::post('/', [NghiPhepController::class, 'store'])->name('nghiphep.store');
+    // --- MODULE: MUA SẮM ---
+    Route::prefix('phieu-yeu-cau')->name('phieu.')->group(function () {
+        Route::controller(MuaSamController::class)->group(function () {
+            Route::get('/', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::post('/{id}/bao-gia', 'capNhatBaoGia')->name('bao_gia');
+            Route::post('/{id}/nhan-hang', 'xacNhanNhanHang')->name('nhan_hang');
+        });
+
+        Route::controller(PhieuYeuCauController::class)->group(function () {
+            Route::get('/{id}', 'show')->name('show');
+            Route::post('/{id}/duyet', 'approve')->name('duyet');
+            Route::post('/{id}/huy', 'cancel')->name('cancel');
+            Route::get('/{id}/in', 'print')->name('print');
+        });
     });
 
-    // ==========================================
-    // MODULE: TỔNG TRẠM ĐIỀU PHỐI (Xử lý chung)
-    // ==========================================
-    Route::prefix('phieu-yeu-cau')->group(function () {
-        Route::get('/{id}', [PhieuYeuCauController::class, 'show'])->name('phieu.show');
-        Route::post('/{id}/duyet', [PhieuYeuCauController::class, 'approve'])->name('phieu.duyet');
-        Route::post('/{id}/huy', [PhieuYeuCauController::class, 'cancel'])->name('phieu.cancel');
-        Route::get('/{id}/in', [PhieuYeuCauController::class, 'print'])->name('phieu.print');
+    // --- MODULE: NGHỈ PHÉP ---
+    Route::controller(NghiPhepController::class)->prefix('nghi-phep')->name('nghiphep.')->group(function () {
+        Route::get('/tao-moi', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
     });
 
-    // ==========================================
-    // MODULE: THANH TOÁN (Kế toán)
-    // ==========================================
-    // VNPAY
-    Route::post('/phieu-yeu-cau/{id}/vnpay', [VnpayController::class, 'createPayment'])->name('vnpay.create');
+    // --- MODULE: TÀI CHÍNH ---
+    Route::prefix('phieu-yeu-cau/{id}')->group(function () {
+        Route::post('/vnpay', [VnpayController::class, 'createPayment'])->name('vnpay.create');
+        Route::get('/thanh-toan', [ThanhToanController::class, 'showQR'])->name('thanhtoan.show');
+        Route::post('/xac-nhan-thanh-toan', [ThanhToanController::class, 'xacNhanThanhToan'])->name('thanhtoan.xacnhan');
+    });
     Route::get('/vnpay-return', [VnpayController::class, 'vnpayReturn'])->name('vnpay.return');
 
-    // Thủ công (VietQR)
-    Route::get('/phieu-yeu-cau/{id}/thanh-toan', [ThanhToanController::class, 'showQR'])->name('thanhtoan.show');
-    Route::post('/phieu-yeu-cau/{id}/xac-nhan-thanh-toan', [ThanhToanController::class, 'xacNhanThanhToan'])->name('thanhtoan.xacnhan');
+    // --- MODULE: BLOG ---
+   Route::middleware(['auth'])->group(function () {
+    Route::get('/bang-tin', [BaiVietController::class, 'index'])->name('blog.index');
+    Route::get('/bang-tin/{slug}', [BaiVietController::class, 'show'])->name('blog.show');
+});
 
-    // ==========================================
-    // MODULE: DANH MỤC & NHÂN SỰ (Admin)
-    // ==========================================
-    Route::resource('danhmuc', DanhMucController::class)->only(['index', 'store', 'update', 'destroy']);
 
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
 
+    Route::middleware(['auth'])->prefix('admin/bang-tin')->name('admin.blog.')->group(function () {
+    Route::controller(BaiVietController::class)->group(function () {
+
+        Route::get('/manage', 'manage')->name('manage');
+        Route::get('/create', 'create')->name('create');
+
+        Route::post('/store', 'store')->name('store');
+        Route::post('/upload-image', 'uploadImage')->name('uploadImage');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+        Route::post('/{id}/restore', 'restore')->name('restore');
+
+    });
+});
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROTECTED WORKSPACES (RBAC)
+    |--------------------------------------------------------------------------
+    */
+
+    // --- 1. ADMIN SYSTEM ---
+    Route::middleware(CheckRole::class . ':' . VaiTro::ADMIN->value)->prefix('admin')->name('admin.')->group(function () {
+
+        Route::controller(UserController::class)->prefix('users')->name('users.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+            Route::put('/{id}', 'update')->name('update');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+
+        Route::controller(DanhMucController::class)->prefix('danh-muc')->name('danhmuc.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+            Route::put('/{id}', 'update')->name('update');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+
+        Route::controller(NhaCungCapController::class)->prefix('nha-cung-cap')->name('nhacungcap.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+            Route::put('/{id}', 'update')->name('update');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+
+        Route::controller(PhongBanController::class)->prefix('phong-ban')->name('phongban.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+            Route::put('/{id}', 'update')->name('update');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+
+        Route::controller(PhieuAdminController::class)->prefix('phieu-yeu-cau')->name('phieu_yeu_cau.')->group(function () {
+            Route::get('/', 'index')->name('index');
+        });
+
+
+        Route::controller(SettingController::class)->prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/update', 'update')->name('update');
+
+        Route::controller(PhieuAdminController::class)->prefix('phieu-yeu-cau')->name('phieu_yeu_cau.')->group(function () {
+            Route::get('/', 'index')->name('index');
+        });
+
+    });
+    });
+
+    // --- 2. DEPARTMENT MANAGERS ---
+    Route::middleware(CheckRole::class . ':' . VaiTro::TRUONG_PHONG->value)
+        ->get('/manager/approvals', [TruongPhongWorkspaceController::class, 'index'])
+        ->name('manager.approvals');
+
+    Route::middleware(CheckRole::class . ':' . VaiTro::GIAM_DOC->value)
+        ->get('/director/approvals', [GiamDocWorkspaceController::class, 'index'])
+        ->name('director.approvals');
+
+    // --- 3. SPECIALIZED STAFF ---
+    Route::middleware(CheckRole::class . ':' . VaiTro::NHAN_VIEN_MUA_SAM->value)
+        ->get('/purchasing', [MuaSamWorkspaceController::class, 'index'])
+        ->name('purchasing.index');
+
+    Route::middleware(CheckRole::class . ':' . VaiTro::KE_TOAN->value)->prefix('accountant')->name('accountant.')->group(function () {
+        Route::get('/', [KeToanWorkspaceController::class, 'index'])->name('index');
+        Route::get('/export', [KeToanWorkspaceController::class, 'exportExcel'])->name('export');
+    });
+
+    Route::middleware(CheckRole::class . ':' . VaiTro::NHAN_SU->value)
+        ->get('/hr/dashboard', [NhanSuWorkspaceController::class, 'index'])
+        ->name('hr.index');
 });
