@@ -2,7 +2,11 @@
 import { ref, watch } from 'vue';
 import { Link, router, Head, useForm } from '@inertiajs/vue3';
 import StatusBadge from '@/Components/UI/StatusBadge.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 
+defineOptions({
+    layout: AdminLayout
+});
 const props = defineProps({
     users: Object,
     phongBans: Array,
@@ -105,7 +109,7 @@ const formatPagination = (label) => {
 <template>
     <Head title="Quản lý Nhân sự - Admin"/>
 
-    <div class="py-8 bg-[#F8FAFC] min-h-[calc(100vh-64px)]">
+    <div class="py-6 min-h-[calc(100vh-64px)] bg-transparent">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 pb-5 border-b border-slate-200">
@@ -218,10 +222,11 @@ const formatPagination = (label) => {
                                 <tr v-for="user in users.data" :key="user.id" class="hover:bg-slate-50 transition-colors group">
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3.5">
-                                            <img v-if="user.avatar" :src="'/storage/' + user.avatar" class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-sm">
-                                            <div v-else class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-sm shadow-sm border border-slate-200">
-                                                {{ user.name.charAt(0).toUpperCase() }}
-                                            </div>
+
+                                            <img :src="user.avatar_url"
+                                                :alt="'Avatar của ' + user.name"
+                                                class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-sm bg-slate-50">
+
                                             <div>
                                                 <p class="text-sm font-bold text-slate-900">{{ user.name }}</p>
                                                 <p class="text-[11px] font-medium text-slate-500">{{ user.email }}</p>

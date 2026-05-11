@@ -10,6 +10,7 @@ const user = computed(() => page.props.auth.user);
 const props = defineProps({
     roleData: { type: Object, default: () => ({}) },
     stats: Object,
+    nghi_phep: { type: Object, default: () => ({}) },
     recentRequests: Object,
     filters: Object,
     trangThais: Array
@@ -37,6 +38,7 @@ const CurrentDashboard = computed(() => {
     <component
         :is="CurrentDashboard"
         :roleData="roleData"  :stats="stats"
+        :nghi_phep="nghi_phep"
         :recentRequests="recentRequests"
         :filters="filters"
         :trangThais="trangThais"

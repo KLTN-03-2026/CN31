@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch, onMounted } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import debounce from 'lodash/debounce';
 import Chart from 'chart.js/auto';
 
@@ -9,9 +9,39 @@ import StatusBadge from '@/Components/UI/StatusBadge.vue';
 
 const props = defineProps({
     stats: { type: Object, default: () => ({ total: 0, cho_xuly: 0, hoan_tat: 0, that_bai: 0, da_thanh_toan: 0 }) },
+    nghi_phep: {
+        type: Object,
+        default: () => ({ tong_ngay_phep: 0, ngay_phep_da_dung: 0, ngay_phep_con_lai: 0, phan_tram_su_dung: 0 })
+    },
     recentRequests: { type: Object, default: () => ({ data: [], links: [] }) },
     filters: { type: Object, default: () => ({ search: '', status: 'all' }) },
     trangThais: { type: Array, default: () => [] }
+});
+
+const nghiPhep = computed(() => {
+    const tongNgayPhep = Number(props.nghi_phep?.tong_ngay_phep ?? 0);
+    const ngayPhepDaDung = Number(props.nghi_phep?.ngay_phep_da_dung ?? 0);
+    const ngayPhepConLai = Number(props.nghi_phep?.ngay_phep_con_lai ?? 0);
+    const phanTramSuDung = Number(props.nghi_phep?.phan_tram_su_dung ?? 0);
+
+    return {
+        tongNgayPhep,
+        ngayPhepDaDung,
+        ngayPhepConLai,
+        phanTramSuDung: Math.max(0, Math.min(phanTramSuDung, 100))
+    };
+});
+
+const leaveProgressBarClass = computed(() => {
+    if (nghiPhep.value.phanTramSuDung < 50) {
+        return 'bg-emerald-500';
+    }
+
+    if (nghiPhep.value.phanTramSuDung <= 80) {
+        return 'bg-amber-500';
+    }
+
+    return 'bg-red-500';
 });
 
 const search = ref(new URLSearchParams(window.location.search).get('search') || '');
@@ -62,11 +92,13 @@ onMounted(() => {
     <Head title="Tổng quan" />
 
     <div class="py-4">
+        <!-- Header -->
         <div class="mb-6">
             <h2 class="font-black text-2xl text-slate-900 tracking-tight">Dashboard</h2>
             <p class="text-sm text-slate-500 mt-1 font-medium">Tổng quan tình hình xử lý yêu cầu và ngân sách</p>
         </div>
 
+        <!-- Row 1: KPI Cards (Giữ nguyên) -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <KpiCard title="Tổng phiếu" :value="stats?.total" colorType="slate" />
             <KpiCard title="Cần xử lý" :value="stats?.cho_xuly" colorType="amber" />
@@ -75,61 +107,101 @@ onMounted(() => {
             <KpiCard title="Thất bại / Hủy" :value="stats?.that_bai" colorType="red" />
         </div>
 
+        <!-- Row 2: Chia 2 cột (Trái 1 phần, Phải 3 phần) -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
-            <div class="lg:col-span-1 bg-white shadow-sm rounded-2xl border border-slate-200 p-6 flex flex-col h-full">
+            <!-- ==============================================
+                 CỘT TRÁI (col-span-1): Chứa Widget Nhỏ
+            =============================================== -->
+            <div class="lg:col-span-1 flex flex-col gap-6">
 
-                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0 text-center mb-4">Tỷ lệ trạng thái</h3>
-
-                <div class="flex-grow flex flex-col items-center justify-center w-full">
-
-                    <div class="relative w-full h-[180px] flex items-center justify-center shrink-0">
-                        <canvas ref="chartCanvas"></canvas>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-1">
-                            <span class="text-3xl font-black text-slate-800">{{ stats?.total || 0 }}</span>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Yêu cầu</span>
+                <!-- Widget 1: Quỹ ngày phép (Đã được thu gọn vào đây) -->
+                <div class="bg-white shadow-sm rounded-2xl border border-slate-200 p-5 flex flex-col gap-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Quỹ ngày phép</p>
+                            <p class="mt-1 text-xl font-black text-slate-800 tabular-nums leading-none">
+                                {{ nghiPhep.ngayPhepDaDung }}<span class="text-sm text-slate-400 font-bold">/{{ nghiPhep.tongNgayPhep }}</span>
+                            </p>
+                        </div>
+                        <div class="text-right bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                            <p class="text-[10px] text-slate-500 font-bold uppercase">Còn lại</p>
+                            <p class="text-sm font-black text-blue-600 tabular-nums">{{ nghiPhep.ngayPhepConLai }}</p>
                         </div>
                     </div>
 
-                    <div class="w-full mt-8 flex flex-col gap-3.5 px-2">
-                        <div class="flex items-center justify-between group cursor-default">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-3 h-3 rounded-full bg-yellow-500 shadow-sm"></span>
-                                <span class="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">Cần xử lý</span>
-                            </div>
-                            <span class="text-sm font-bold text-slate-800">{{ stats?.cho_xuly || 0 }}</span>
+                    <div class="flex flex-col gap-1.5 mt-1">
+                        <div class="flex justify-between items-end">
+                            <p class="text-[11px] font-bold text-slate-500">Tiến độ sử dụng</p>
+                            <p class="text-[11px] font-black text-slate-700">{{ nghiPhep.phanTramSuDung }}%</p>
                         </div>
-
-                        <div class="flex items-center justify-between group cursor-default">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-3 h-3 rounded-full bg-[#60a5fa] shadow-sm"></span>
-                                <span class="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">Đã thanh toán</span>
-                            </div>
-                            <span class="text-sm font-bold text-slate-800">{{ stats?.da_thanh_toan || 0 }}</span>
-                        </div>
-
-                        <div class="flex items-center justify-between group cursor-default">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-3 h-3 rounded-full bg-[#34d399] shadow-sm"></span>
-                                <span class="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">Hoàn tất</span>
-                            </div>
-                            <span class="text-sm font-bold text-slate-800">{{ stats?.hoan_tat || 0 }}</span>
-                        </div>
-
-                        <div class="flex items-center justify-between group cursor-default">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-3 h-3 rounded-full bg-[#f87171] shadow-sm"></span>
-                                <span class="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">Thất bại / Hủy</span>
-                            </div>
-                            <span class="text-sm font-bold text-slate-800">{{ stats?.that_bai || 0 }}</span>
+                        <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                            <div class="h-full transition-all duration-500 ease-out"
+                                :class="leaveProgressBarClass"
+                                :style="{ width: `${nghiPhep.phanTramSuDung}%` }"
+                            />
                         </div>
                     </div>
+                </div>
 
+                <!-- Widget 2: Tỷ lệ trạng thái (Chart) -->
+                <div class="bg-white shadow-sm rounded-2xl border border-slate-200 p-6 flex flex-col flex-grow hover:shadow-md transition-shadow">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0 text-center mb-4">Tỷ lệ trạng thái</h3>
+
+                    <div class="flex-grow flex flex-col items-center justify-center w-full">
+                        <!-- Biểu đồ -->
+                        <div class="relative w-full h-[160px] flex items-center justify-center shrink-0">
+                            <canvas ref="chartCanvas"></canvas>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-1">
+                                <span class="text-2xl font-black text-slate-800">{{ stats?.total || 0 }}</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Yêu cầu</span>
+                            </div>
+                        </div>
+
+                        <!-- Chú thích (Legend) -->
+                        <div class="w-full mt-6 flex flex-col gap-3 px-1">
+                            <div class="flex items-center justify-between group cursor-default">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-sm"></span>
+                                    <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900 transition-colors">Cần xử lý</span>
+                                </div>
+                                <span class="text-xs font-black text-slate-800">{{ stats?.cho_xuly || 0 }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between group cursor-default">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-[#60a5fa] shadow-sm"></span>
+                                    <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900 transition-colors">Đã thanh toán</span>
+                                </div>
+                                <span class="text-xs font-black text-slate-800">{{ stats?.da_thanh_toan || 0 }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between group cursor-default">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-[#34d399] shadow-sm"></span>
+                                    <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900 transition-colors">Hoàn tất</span>
+                                </div>
+                                <span class="text-xs font-black text-slate-800">{{ stats?.hoan_tat || 0 }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between group cursor-default">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-[#f87171] shadow-sm"></span>
+                                    <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900 transition-colors">Thất bại / Hủy</span>
+                                </div>
+                                <span class="text-xs font-black text-slate-800">{{ stats?.that_bai || 0 }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-3 bg-white shadow-sm rounded-2xl border border-slate-200 flex flex-col overflow-hidden">
+            <!-- ==============================================
+                 CỘT PHẢI (col-span-3): Chứa Bảng Dữ Liệu
+            =============================================== -->
+            <div class="lg:col-span-3 bg-white shadow-sm rounded-2xl border border-slate-200 flex flex-col overflow-hidden h-fit">
 
+                <!-- Thanh công cụ của bảng -->
                 <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Danh sách yêu cầu gần đây</h3>
                     <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -144,6 +216,7 @@ onMounted(() => {
                     </div>
                 </div>
 
+                <!-- Nội dung bảng (Giữ nguyên) -->
                 <div class="overflow-x-auto flex-grow">
                     <table class="min-w-full divide-y divide-slate-100">
                         <thead class="bg-slate-50">
@@ -170,12 +243,10 @@ onMounted(() => {
                                 </td>
                                 <td class="px-6 py-4 align-middle text-right">
                                     <span v-if="phieu.loai_phieu === 'nghi_phep'" class="text-slate-300 font-bold">-</span>
-
                                     <span v-else-if="phieu.tong_tien && phieu.tong_tien !== '0 VNĐ'"
                                         class="whitespace-nowrap text-sm font-bold text-slate-700 tabular-nums">
                                         {{ phieu.tong_tien }}
                                     </span>
-
                                     <span v-else class="text-amber-600 text-[10px] font-bold bg-amber-50 border border-amber-100 px-2 py-1 rounded uppercase tracking-wider inline-block">Chờ báo giá</span>
                                 </td>
                                 <td class="px-6 py-4 align-middle text-center">

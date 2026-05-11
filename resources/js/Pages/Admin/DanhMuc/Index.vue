@@ -1,7 +1,11 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { Link, router, Head, useForm } from '@inertiajs/vue3';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 
+defineOptions({
+    layout: AdminLayout
+});
 const props = defineProps({
     danhMucs: Object,
     filters: Object
@@ -83,7 +87,7 @@ const formatPagination = (label) => {
 <template>
     <Head title="Danh mục - Admin"/>
 
-    <div class="py-8 bg-[#F8FAFC] min-h-[calc(100vh-64px)]">
+   <div class="py-6 min-h-[calc(100vh-64px)] bg-transparent">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-slate-200 pb-5">

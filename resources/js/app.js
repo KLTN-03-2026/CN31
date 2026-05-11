@@ -10,7 +10,7 @@ import Layout from './Layouts/Layout.vue';
 createInertiaApp({
     progress: {
 
-        color: '#fff',
+        color: '#white', // Màu sắc của thanh loading
         // Có hiện cái vòng xoay xoay ở góc trên bên phải không?
         // true = Hiện | false = Ẩn
         showSpinner: true,
@@ -19,13 +19,14 @@ createInertiaApp({
         // (Mở rộng) Delay: Thời gian chờ tối thiểu trước khi hiện thanh loading (mặc định 250ms)
          //delay: 250,
     },
-    title: (title) => title ? `${title} | Procureflow` : 'My App',
+    title: (title) => title ? `${title} - MrGiotTech` : 'My App',
     resolve: name => {
         const pages = import.meta.glob('./Pages/**/*.vue', { eager: true })
         let page = pages[`./Pages/${name}.vue`]
 
-        // Logic: Nếu trang đó không có layout riêng -> Dùng Layout mặc định
-        page.default.layout = page.default.layout || Layout
+        if (page.default.layout === undefined) {
+            page.default.layout = Layout;
+        }
 
         return page
     },

@@ -49,7 +49,7 @@ const submit = () => {
             <div class="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
                 <div>
                     <h2 class="text-lg font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Đơn Xin Nghỉ Phép
+                     Đơn Xin Nghỉ Phép
                     </h2>
                     <p class="text-xs text-slate-500 mt-1 font-medium">Bàn giao công việc kỹ lưỡng trước khi nghỉ.</p>
                 </div>

@@ -1,3 +1,19 @@
+<!-- KHỐI 1: XỬ LÝ LAYOUT ĐỘNG (Dynamic Layout) -->
+<script>
+import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Layout from '@/Layouts/Layout.vue'; // Layout mặc định cho Nhân sự
+
+export default {
+    layout: (h, page) => {
+        // Lấy cờ isAdmin từ Middleware HandleInertiaRequests
+        const isAdmin = page.props.auth.user?.isAdmin;
+        // Nếu là Admin thì dùng AdminLayout, ngược lại dùng Layout mặc định
+        return h(isAdmin ? AdminLayout : Layout, () => h(page));
+    }
+}
+</script>
+
+<!-- KHỐI 2: LOGIC COMPONENT BÌNH THƯỜNG -->
 <script setup>
 import { useForm, Head } from '@inertiajs/vue3';
 import TiptapEditor from '@/Components/UI/TiptapEditor.vue';
@@ -6,12 +22,11 @@ const form = useForm({
     tieu_de: '',
     loai_bai_viet: 'tin_tuc',
     noi_dung: '',
-    anh_bia: null, // Thêm trường ảnh bìa vào Form State
+    anh_bia: null,
 });
 
 const submit = () => {
-    // Inertia tự động chuyển thành multipart/form-data khi có File
-    form.post(route('blog.store'));
+    form.post(route('admin.blog.store'));
 };
 </script>
 

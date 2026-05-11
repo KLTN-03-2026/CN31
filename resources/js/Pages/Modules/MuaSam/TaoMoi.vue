@@ -48,21 +48,18 @@ const requestTemplates = [
 watch(selectedTemplate, (newVal) => {
     if (newVal === 'khac') {
         isCustomTitle.value = true;
-        form.tieu_de = ''; // Xóa trắng để người dùng tự gõ
+        form.tieu_de = '';
         form.ly_do = '';
     } else {
         isCustomTitle.value = false;
-        // Tìm template tương ứng và tự động điền
         const template = requestTemplates.find(t => t.title === newVal);
         if (template) {
             form.tieu_de = template.title;
             form.ly_do = template.reason;
-            // Tự động clear lỗi nếu đã có giá trị
             form.clearErrors('tieu_de');
         }
     }
 });
-// ----------------------------------------
 
 const themDong = () => {
     form.san_pham.push({ ten_san_pham: '', danh_muc_id: '', so_luong: 1 });
@@ -82,15 +79,20 @@ const submit = () => {
 <template>
     <Head title="Tạo Yêu Cầu Mua Sắm" />
 
-   <div class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 transition-opacity">
+   <!-- Đổi thành justify-end để căn phải, bỏ padding để panel dính mép -->
+   <div class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex justify-end transition-opacity">
 
         <Link :href="route('dashboard')" class="absolute inset-0 cursor-default"></Link>
 
-        <div class="relative w-full max-w-[700px] bg-white max-h-[90vh] rounded-2xl shadow-2xl flex flex-col animate-scale-in">
+        <!-- Đổi thành h-full, bỏ bo góc, giữ max-w-[700px] vì có chứa table, dùng animate-slide-in-right -->
+        <div class="relative w-full max-w-[700px] bg-white h-full shadow-2xl flex flex-col animate-slide-in-right">
 
-            <div class="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0 rounded-t-2xl">
+            <!-- Bỏ bo góc ở Header (rounded-t-2xl) -->
+            <div class="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
                 <div>
-                    <h2 class="text-lg font-black text-slate-800 uppercase tracking-wide">Tạo Đề Xuất Mua Sắm</h2>
+                    <h2 class="text-lg font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                         Tạo Đề Xuất Mua Sắm
+                    </h2>
                     <p class="text-xs text-slate-500 mt-1 font-medium">Chọn mẫu yêu cầu hoặc tự điền nhu cầu của bạn.</p>
                 </div>
                 <Link :href="route('dashboard')" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
@@ -104,7 +106,7 @@ const submit = () => {
 
                     <div>
                         <h3 class="font-bold text-sm text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> 1. Thông tin chung
+                        1. Thông tin chung
                         </h3>
 
                         <div class="bg-blue-50/50 p-5 rounded-xl border border-blue-100 space-y-5">
@@ -134,7 +136,7 @@ const submit = () => {
 
                     <div>
                         <h3 class="font-bold text-sm text-slate-800 mb-4 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> 2. Danh sách hàng hóa đề xuất cần mua
+                            2. Danh sách hàng hóa đề xuất cần mua
                         </h3>
 
                         <div class="grid grid-cols-12 gap-3 mb-2 font-bold text-[10px] text-slate-500 uppercase tracking-wider bg-slate-50 p-2.5 rounded-lg border border-slate-200">
@@ -174,8 +176,9 @@ const submit = () => {
                     </div>
                 </div>
 
-                <div class="px-6 py-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0 rounded-b-2xl">
-                    <Link :href="route('dashboard')" class="text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm hover:shadow">Hủy bỏ</Link>
+                <!-- Bỏ bo góc ở Footer (rounded-b-2xl) -->
+                <div class="px-6 py-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+                    <Link :href="route('dashboard')" class="text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">Hủy bỏ</Link>
                     <button :disabled="form.processing" class="flex items-center gap-2 bg-blue-600 text-white px-8 py-2.5 rounded-lg font-black hover:bg-blue-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 text-sm">
                         <svg v-if="!form.processing" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         <svg v-else class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -189,20 +192,15 @@ const submit = () => {
 </template>
 
 <style scoped>
-.animate-scale-in {
-    animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out forwards;
-}
-@keyframes scaleIn {
-    0% { transform: scale(0.95); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
+.animate-slide-in-right { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@keyframes slideInRight { 0% { transform: translateX(100%); } 100% { transform: translateX(0); } }
+
+.animate-fade-in { animation: fadeIn 0.3s ease-in-out forwards; }
 @keyframes fadeIn {
     0% { opacity: 0; transform: translateY(-5px); }
     100% { opacity: 1; transform: translateY(0); }
 }
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }

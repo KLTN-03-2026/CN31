@@ -22,7 +22,6 @@ const editor = useEditor({
         Placeholder.configure({
             placeholder: 'Nhập nội dung chi tiết...',
         }),
-        // Cấu hình Extension Image với class chuẩn Enterprise
         Image.configure({
             HTMLAttributes: {
                 class: 'rounded-xl shadow-sm border border-slate-200 max-w-full my-6'
@@ -57,12 +56,10 @@ const addImage = () => {
         formData.append('file', file);
 
         try {
-            // Nhớ cấu hình đúng Route API upload ảnh của bạn ở backend
             const { data } = await axios.post('/blog/upload-image', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            // Chèn ảnh vào editor sau khi upload thành công
             if (data && data.url) {
                 editor.value.chain().focus().setImage({ src: data.url }).run();
             }
@@ -147,7 +144,6 @@ onBeforeUnmount(() => {
     pointer-events: none;
     font-style: italic;
 }
-/* Đảm bảo ảnh chèn vào không bị vỡ layout */
 .ProseMirror img {
     height: auto;
     display: block;

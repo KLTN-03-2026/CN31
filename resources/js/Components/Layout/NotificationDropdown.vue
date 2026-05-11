@@ -10,21 +10,46 @@ const notifications = ref(page.props.auth?.notifications || { list: [], unread_c
 const activeToast = ref(null);
 let toastTimer = null;
 
+const timeAgo = (dateInput) => {
+    if (!dateInput) return 'Vừa xong';
+
+    const safeDate = typeof dateInput === 'string' ? dateInput.replace(' ', 'T') : dateInput;
+    const date = new Date(safeDate);
+    const seconds = Math.floor((new Date() - date) / 1000);
+
+    if (seconds < 60) return "Vừa xong";
+
+    let interval = seconds / 31536000;
+    if (interval >= 1) return Math.floor(interval) + " năm trước";
+
+    interval = seconds / 2592000;
+    if (interval >= 1) return Math.floor(interval) + " tháng trước";
+
+    interval = seconds / 86400;
+    if (interval >= 1) return Math.floor(interval) + " ngày trước";
+
+    interval = seconds / 3600;
+    if (interval >= 1) return Math.floor(interval) + " giờ trước";
+
+    interval = seconds / 60;
+    if (interval >= 1) return Math.floor(interval) + " phút trước";
+
+    return "Vừa xong";
+};
+
 // 1. Lắng nghe thông báo Realtime từ Backend
 watch(() => page.props.auth?.notifications, (newVal) => {
     if (newVal) notifications.value = newVal;
 }, { deep: true });
 
-// 2. Lắng nghe thông báo Session (Flash Messages: Đăng nhập, Cập nhật...)
+// 2. Lắng nghe Flash Messages (Đăng nhập, Tạo phiếu...)
 watch(() => page.props.flash, (flash) => {
     if (flash?.success || flash?.error || flash?.message) {
         const type = flash.error ? 'LỖI' : 'THÔNG BÁO';
         const msg = flash.success || flash.error || flash.message;
 
-        // Mượn giao diện của Toast để hiển thị
         activeToast.value = {
-            data: { ma_phieu: type, thong_diep: msg },
-            created_at_label: 'Hệ thống'
+            data: { ma_phieu: type, thong_diep: msg }
         };
 
         if (toastTimer) clearTimeout(toastTimer);
@@ -58,7 +83,7 @@ onMounted(() => {
                     id: notification.id || Date.now(),
                     data: notification,
                     read_at: null,
-                    created_at_label: notification.created_at_label || 'Vừa xong'
+                    created_at: new Date().toISOString() // Thêm ngày giờ hiện tại cho thông báo mới
                 };
                 notifications.value.list.unshift(newNoti);
 
@@ -77,19 +102,27 @@ onUnmounted(() => {
     if (user) window.Echo.leave(`App.Models.User.${user.id}`);
 });
 </script>
+
 <template>
-    <div class="relative group">
-        <button class="relative p-2 text-slate-400 hover:text-blue-600 transition rounded-full hover:bg-blue-50 focus:outline-none">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-            <span v-if="notifications?.unread_count > 0" class="absolute top-0 right-0 flex h-4 w-4">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[10px] text-white font-bold items-center justify-center">
-                    {{ notifications.unread_count > 9 ? '9+' : notifications.unread_count }}
+    <div class="relative group w-full">
+        <!-- Nút Chuông -->
+        <button class="relative flex items-center gap-3 p-2 text-slate-500 hover:text-blue-600 transition rounded-xl hover:bg-blue-50 focus:outline-none w-full">
+            <div class="relative shrink-0 ml-1">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                <span v-if="notifications?.unread_count > 0" class="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[10px] text-white font-bold items-center justify-center">
+                        {{ notifications.unread_count > 9 ? '9+' : notifications.unread_count }}
+                    </span>
                 </span>
-            </span>
+            </div>
+            <div class="hidden md:block text-left overflow-hidden w-0 group-hover:w-auto opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <!-- <span class="whitespace-nowrap font-semibold text-sm text-slate-700">Thông báo</span> -->
+            </div>
         </button>
 
-        <div class="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 w-80">
+        <!-- Menu Dropdown -->
+        <div class="absolute right-0 top-full mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60] w-80 origin-top-right">
             <div class="bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden flex flex-col">
                 <div class="px-4 py-3 border-b border-slate-100"><h3 class="font-black text-lg text-slate-900">Thông báo</h3></div>
 
@@ -102,7 +135,7 @@ onUnmounted(() => {
                             <div class="flex-1 min-w-0">
                                 <p class="text-[11px] font-bold text-blue-600 uppercase">{{ n.data.ma_phieu }}</p>
                                 <p class="text-sm text-slate-800 leading-snug mb-1" :class="!n.read_at ? 'font-bold' : 'font-medium'">{{ n.data.thong_diep }}</p>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">{{ n.created_at_label }}</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">{{ timeAgo(n.created_at) }}</p>
                             </div>
                         </div>
                     </div>
@@ -112,19 +145,21 @@ onUnmounted(() => {
         </div>
     </div>
 
-    <transition enter-active-class="transform ease-out duration-300 transition" enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-4" enter-to-class="translate-y-0 opacity-100 sm:translate-x-0" leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0">
-        <div v-if="activeToast" class="fixed bottom-6 right-6 z-[100] w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-transform" @click="handleNotificationClick(activeToast)">
-            <div class="bg-white rounded-xl shadow-2xl border border-slate-100 flex items-start p-4 relative">
-                <button @click.stop="activeToast = null" class="absolute top-2 right-2 text-slate-400 hover:text-slate-600"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-                <div class="shrink-0"><div class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100 text-blue-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg></div></div>
-                <div class="ml-3 w-0 flex-1">
-                    <p class="text-[11px] font-black text-blue-600 uppercase">{{ activeToast.data.ma_phieu }}</p>
-                    <p class="text-sm font-bold text-slate-900 leading-snug mt-0.5">{{ activeToast.data.thong_diep }}</p>
-                    <p class="text-[10px] text-slate-400 font-bold mt-1 uppercase">Vừa xong</p>
+    <Teleport to="body">
+        <transition enter-active-class="transform ease-out duration-300 transition" enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-4" enter-to-class="translate-y-0 opacity-100 sm:translate-x-0" leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0">
+            <div v-if="activeToast" class="fixed bottom-6 right-6 z-[100] w-full max-w-sm cursor-pointer hover:scale-[1.02] transition-transform" @click="handleNotificationClick(activeToast)">
+                <div class="bg-white rounded-xl shadow-2xl border border-slate-100 flex items-start p-4 relative">
+                    <button @click.stop="activeToast = null" class="absolute top-2 right-2 text-slate-400 hover:text-slate-600"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    <div class="shrink-0"><div class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100 text-blue-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg></div></div>
+                    <div class="ml-3 w-0 flex-1">
+                        <p class="text-[11px] font-black text-blue-600 uppercase">{{ activeToast.data.ma_phieu }}</p>
+                        <p class="text-sm font-bold text-slate-900 leading-snug mt-0.5">{{ activeToast.data.thong_diep }}</p>
+                        <p class="text-[10px] text-slate-400 font-bold mt-1 uppercase">Vừa xong</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </transition>
+        </transition>
+    </Teleport>
 </template>
 
 <style scoped>

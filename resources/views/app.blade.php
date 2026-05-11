@@ -8,7 +8,7 @@
     @routes @vite('resources/js/app.js')
     @inertiaHead
 
-
+<link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 </head>
 <body>
     @inertia
