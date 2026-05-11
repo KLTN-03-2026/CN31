@@ -11,7 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia; // Bổ sung Service vào đây
+use Inertia\Inertia;
 
 class PhieuYeuCauController extends Controller
 {
@@ -25,7 +25,6 @@ class PhieuYeuCauController extends Controller
             'nhatKy' => fn ($query) => $query->with('nguoiThucHien')->orderBy('thoi_gian_duyet', 'desc'),
         ])->findOrFail($id);
 
-        // --- View chi tiết cho Đơn Nghỉ Phép ---
         if ($phieu->loai_phieu === 'nghi_phep') {
             $phieu->load('chiTietNghiPhep.nguoiBanGiao');
 
@@ -35,7 +34,7 @@ class PhieuYeuCauController extends Controller
                     'ma_phieu' => $phieu->ma_phieu,
                     'tieu_de' => $phieu->tieu_de,
                     'ly_do' => $phieu->ly_do,
-                    'ngay_tao' => $phieu->created_at->format('d/m/Y H:i'),
+                    'ngay_tao' => $phieu->created_at->locale('vi')->diffForHumans(),
                     'nguoi_tao' => $phieu->nguoiTao->name,
                     'trang_thai_label' => $phieu->trang_thai->label(),
                     'trang_thai_color' => $phieu->trang_thai->color(),
@@ -51,13 +50,12 @@ class PhieuYeuCauController extends Controller
                         'hanh_dong_label' => $log->hanh_dong->label(),
                         'nguoi_thuc_hien' => $log->nguoiThucHien->name,
                         'ghi_chu' => $log->ghi_chu,
-                        'thoi_gian' => Carbon::parse($log->thoi_gian_duyet)->format('d/m/Y H:i:s'),
+                        'thoi_gian' => Carbon::parse($log->thoi_gian_duyet)->locale('vi')->diffForHumans(),
                     ]),
                 ],
             ]);
         }
 
-        // --- View chi tiết cho Phiếu Mua Sắm ---
         $phieu->load(['chiTiet.danhMuc', 'nhaCungCap']);
 
         $nhaCungCaps = (Auth::user()->isMuaSam() && $phieu->trang_thai === TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA)
@@ -87,7 +85,7 @@ class PhieuYeuCauController extends Controller
                 'nha_cung_cap' => $phieu->nhaCungCap?->ten_nha_cung_cap ?? 'Chưa xác định',
                 'file_nhan_hang' => $phieu->file_nhan_hang ? asset('storage/'.$phieu->file_nhan_hang) : null,
                 'ghi_chu_nhan_hang' => $phieu->ghi_chu_nhan_hang,
-                'ngay_tao' => $phieu->created_at->format('d/m/Y H:i'),
+                'ngay_tao' => $phieu->created_at->locale('vi')->diffForHumans(),
                 'nguoi_tao' => $phieu->nguoiTao->name,
                 'trang_thai_label' => $phieu->trang_thai->label(),
                 'trang_thai_color' => $phieu->trang_thai->color(),
@@ -97,7 +95,7 @@ class PhieuYeuCauController extends Controller
                     'hanh_dong_label' => $log->hanh_dong->label(),
                     'nguoi_thuc_hien' => $log->nguoiThucHien->name,
                     'ghi_chu' => $log->ghi_chu,
-                    'thoi_gian' => Carbon::parse($log->thoi_gian_duyet)->format('d/m/Y H:i:s'),
+                    'thoi_gian' => Carbon::parse($log->thoi_gian_duyet)->locale('vi')->diffForHumans(),
                 ]),
             ],
             'nhaCungCaps' => $nhaCungCaps,

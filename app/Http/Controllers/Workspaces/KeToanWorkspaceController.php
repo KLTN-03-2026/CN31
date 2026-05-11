@@ -22,20 +22,15 @@ class KeToanWorkspaceController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-
-        // Guard: Strict role authorization
-        if ($user->vai_tro !== VaiTro::KE_TOAN) {
-            abort(403, 'Bạn không có quyền truy cập Không gian làm việc Kế toán.');
-        }
-
+        // $user = Auth::user();
         $selectedYear = $request->input('year', now()->year);
 
         // Core Query: Pending Payments (Real-time, ignores year filter)
         $queryChoThanhToan = PhieuYeuCau::with('nguoiTao')
-            ->where('trang_thai', TrangThaiPhieu::CHO_THANH_TOAN->value);
+            ->where('trang_thai', [
+                TrangThaiPhieu::CHO_THANH_TOAN->value,
+            ]);
 
-        // [FIX BUGS]: Tính tổng tiền TRƯỚC KHI gọi paginate() để không bị dính OFFSET của trang 2, 3
         $tongTienChoChi = (clone $queryChoThanhToan)->sum('tong_tien');
 
         $danhSachChoThanhToan = $queryChoThanhToan->latest('updated_at')
@@ -49,7 +44,7 @@ class KeToanWorkspaceController extends Controller
                 'tong_tien' => number_format($phieu->tong_tien, 0, ',', '.').' VNĐ',
                 'trang_thai_label' => $phieu->trang_thai->label(),
                 'trang_thai_color' => $phieu->trang_thai->color(),
-                'ngay_tao' => $phieu->created_at->diffForHumans(),
+                'ngay_tao' => $phieu->created_at->locale('vi')->diffForHumans(),
             ]);
 
         // Aggregate: Monthly Expenditure for the selected year
@@ -75,7 +70,7 @@ class KeToanWorkspaceController extends Controller
         return Inertia::render('Portals/Accountant/Index', [
             'roleData' => [
                 'stats' => [
-                    'cho_thanh_toan' => $danhSachChoThanhToan->total(), // Tận dụng total() của paginate
+                    'cho_thanh_toan' => $danhSachChoThanhToan->total(),
                     'tong_tien_cho_chi' => (float) $tongTienChoChi,
                 ],
                 'danhSachChoThanhToan' => $danhSachChoThanhToan,

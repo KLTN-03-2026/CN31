@@ -20,7 +20,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         if (! Auth::user()->isAdmin()) {
-            abort(403);
+            abort(403,'Bạn không có quyền thực hiện hành động này.');
         }
 
         $query = User::with('phongBan')->orderBy('created_at', 'desc');
@@ -34,7 +34,7 @@ class UserController extends Controller
         }
 
         return Inertia::render('Admin/Users/Index', [
-            'users' => $query->paginate(15)->withQueryString(),
+            'users' => $query->paginate(6)->withQueryString(),
             'phongBans' => PhongBan::select('id', 'ten_phong_ban')->get(),
             'filters' => $request->only('search'),
         ]);
@@ -46,7 +46,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         if (! Auth::user()->isAdmin()) {
-            abort(403);
+            abort(403,'Bạn không có quyền thực hiện hành động này.');
         }
 
         $validated = $request->validate([
@@ -57,6 +57,14 @@ class UserController extends Controller
             'phong_ban_id' => 'nullable|exists:phong_ban,id',
             'tong_ngay_phep' => 'required|numeric|min:0',
         ], [
+            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
+            'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
+            'email.required' => 'Địa chỉ email là bắt buộc.',
+            'email.email' => 'Địa chỉ email không hợp lệ.',
+            'phong_ban_id.exists' => 'Phòng ban được chọn không tồn tại.',
+            'tong_ngay_phep.min' => 'Tổng ngày phép phải là một số không âm.',
+            'vai_tro.required' => 'Vai trò là bắt buộc.',
+            'vai_tro.string' => 'Vai trò phải là một chuỗi.',
             'email.unique' => 'Địa chỉ email này đã tồn tại trong hệ thống.',
         ]);
 
@@ -80,7 +88,7 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         if (! Auth::user()->isAdmin()) {
-            abort(403);
+            abort(403,'Bạn không có quyền thực hiện hành động này.');
         }
 
         $user = User::findOrFail($id);
@@ -118,7 +126,7 @@ class UserController extends Controller
     public function destroy($id)
     {
         if (! Auth::user()->isAdmin()) {
-            abort(403);
+            abort(403,'Bạn không có quyền thực hiện hành động này.');
         }
 
         $user = User::findOrFail($id);

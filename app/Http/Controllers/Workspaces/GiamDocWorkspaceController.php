@@ -18,12 +18,7 @@ class GiamDocWorkspaceController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-
-        // Guard: Strict role authorization
-        if (! $user->isGiamDoc()) {
-            abort(403, 'Khu vực dành riêng cho Ban Giám Đốc.');
-        }
+        // $user = Auth::user();
 
         // Core Query: Pending High-Level Approvals
         $queryDuyet = PhieuYeuCau::with(['nguoiTao', 'phongBan'])
@@ -38,7 +33,7 @@ class GiamDocWorkspaceController extends Controller
         }
 
         $danhSachChoDuyet = $queryDuyet->latest('updated_at')
-            ->paginate(5, ['*'], 'approvals_page')
+            ->paginate(3, ['*'], 'approvals_page')
             ->onEachSide(1)
             ->withQueryString()
             ->through(fn ($phieu) => [
@@ -50,7 +45,7 @@ class GiamDocWorkspaceController extends Controller
                 'tong_tien' => number_format($phieu->tong_tien, 0, ',', '.').' ₫',
                 'trang_thai_label' => $phieu->trang_thai->label(),
                 'trang_thai_color' => $phieu->trang_thai->color(),
-                'ngay_tao' => $phieu->created_at->diffForHumans(),
+                'ngay_tao' => $phieu->created_at->locale('vi')->diffForHumans(),
             ]);
 
         // Aggregate: Monthly Expenditure across all departments
@@ -95,7 +90,8 @@ class GiamDocWorkspaceController extends Controller
                     'bar' => [
                         'labels' => ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
                         'thucChi' => array_values($thucChiTheoThang),
-                        'nganSach' => array_fill(1, 12, $nganSachTrungBinhThang),
+                        // ĐÃ FIX: Sử dụng array_fill từ index 0 để đảm bảo là mảng tuần tự chuẩn JSON
+                        'nganSach' => array_fill(0, 12, $nganSachTrungBinhThang),
                     ],
                     'selectedYear' => (int) $selectedYear,
                 ],

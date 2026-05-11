@@ -21,11 +21,6 @@ class MuaSamWorkspaceController extends Controller
     {
         $user = Auth::user();
 
-        // Guard: Strict role authorization
-        if ($user->vai_tro !== VaiTro::NHAN_VIEN_MUA_SAM) {
-            abort(403, 'Bạn không có quyền truy cập khu vực Mua sắm.');
-        }
-
         // Core Query 1: Requests Pending Quotation
         $queryChoBaoGia = PhieuYeuCau::with('nguoiTao')
             ->where('trang_thai', TrangThaiPhieu::CHO_MUA_SAM_BAO_GIA->value);
@@ -49,7 +44,7 @@ class MuaSamWorkspaceController extends Controller
                 'nguoi_tao' => $phieu->nguoiTao->name,
                 'trang_thai_label' => $phieu->trang_thai->label(),
                 'trang_thai_color' => $phieu->trang_thai->color(),
-                'ngay_tao' => $phieu->created_at->diffForHumans(),
+                'ngay_tao' => $phieu->created_at->locale('vi')->diffForHumans(),
             ]);
 
         // Core Query 2: Monitored Orders (Processing/Completed)
@@ -86,7 +81,7 @@ class MuaSamWorkspaceController extends Controller
                 'nguoi_tao' => $phieu->nguoiTao->name,
                 'trang_thai_label' => $phieu->trang_thai->label(),
                 'trang_thai_color' => $phieu->trang_thai->color(),
-                'ngay_tao' => $phieu->updated_at->diffForHumans(),
+                 'ngay_tao' => $phieu->updated_at->locale('vi')->diffForHumans(),
             ]);
 
         // Statistics
@@ -96,7 +91,7 @@ class MuaSamWorkspaceController extends Controller
             TrangThaiPhieu::TU_CHOI->value,
             TrangThaiPhieu::DA_HUY->value,
             TrangThaiPhieu::NHAN_SU_DUYET->value,
-        ])->whereMonth('updated_at', now()->month)->count();
+        ])->whereMonth('created_at', now()->month)->count();
 
         $trangThais = collect([
             TrangThaiPhieu::CHO_GIAM_DOC_DUYET,

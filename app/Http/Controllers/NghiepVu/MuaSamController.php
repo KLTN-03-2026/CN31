@@ -10,6 +10,7 @@ use App\Models\DanhMuc;
 use App\Models\NhatKyDuyet;
 use App\Models\PhieuYeuCau;
 use App\Models\User;
+use App\Models\Setting;
 use App\Notifications\PhieuYeuCauNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -130,8 +131,9 @@ class MuaSamController extends Controller
                     ? $request->file('file_bao_gia')->store('bao_gia', 'public')
                     : $phieu->file_bao_gia;
 
-                // Threshold logic: >= 20M requires Director approval
-                $isVuotHanMuc = $tongTien >= 20000000;
+                $hanMuc = (int) Setting::get('han_muc_giam_doc_duyet', 20000000);
+                $isVuotHanMuc = $tongTien >= $hanMuc;
+
                 $trangThaiTiepTheo = $isVuotHanMuc ? TrangThaiPhieu::CHO_GIAM_DOC_DUYET : TrangThaiPhieu::CHO_THANH_TOAN;
 
                 $phieu->update([

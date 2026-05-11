@@ -28,6 +28,8 @@ class ProfileController extends Controller
             'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
             'password.mixedCase' => 'Mật khẩu phải chứa cả chữ hoa và chữ thường.',
             'password.numbers' => 'Mật khẩu phải chứa ít nhất một số.',
+   // mật khẩu phải có ít nhất 8 ký tự, chứa cả chữ hoa, chữ thường và số
+
         ]);
 
         $user = Auth::user();
@@ -38,4 +40,5 @@ class ProfileController extends Controller
 
         return back()->with('success', 'Đã thay đổi mật khẩu thành công!');
     }
+    
 }

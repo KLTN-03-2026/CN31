@@ -22,10 +22,6 @@ class NhanSuWorkspaceController extends Controller
     {
         $user = Auth::user();
 
-        // Guard: Strict role authorization
-        if (! $user->isNhanSu()) {
-            abort(403, 'Khu vực dành riêng cho Phòng Nhân sự.');
-        }
 
         // Core Query: Pending E-Leave Approvals
         $queryDuyet = PhieuYeuCau::with(['nguoiTao', 'phongBan'])
@@ -52,7 +48,7 @@ class NhanSuWorkspaceController extends Controller
                 'ten_phong_ban' => $phieu->phongBan->ten_phong_ban ?? 'Chưa cập nhật',
                 'trang_thai_label' => $phieu->trang_thai->label(),
                 'trang_thai_color' => $phieu->trang_thai->color(),
-                'ngay_tao' => $phieu->created_at->diffForHumans(),
+                'ngay_tao' => $phieu->created_at->locale('vi')->diffForHumans(),
             ]);
 
         // Core Query: Company-wide Leave Balance

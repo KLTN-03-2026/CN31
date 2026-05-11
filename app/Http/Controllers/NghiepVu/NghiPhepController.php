@@ -46,7 +46,20 @@ class NghiPhepController extends Controller
             'ngay_ket_thuc' => 'required|date|after_or_equal:ngay_bat_dau',
             'so_ngay_nghi' => 'required|numeric|min:0.5',
             'nguoi_ban_giao_id' => 'nullable|exists:users,id',
-        ]);
+        ],
+        [
+            'tieu_de.required' => 'Vui lòng nhập tiêu đề.',
+            'ly_do.required' => 'Vui lòng nhập lý do.',
+            'loai_nghi_phep.required' => 'Vui lòng chọn loại nghỉ phép.',
+            'ngay_bat_dau.required' => 'Ngày bắt đầu không được để trống.',
+            'ngay_ket_thuc.required' => 'Ngày kết thúc không được để trống.',
+            'ngay_ket_thuc.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+            'so_ngay_nghi.required' => 'Số ngày nghỉ không được để trống.',
+            'so_ngay_nghi.numeric' => 'Số ngày nghỉ phải là một số.',
+            'so_ngay_nghi.min' => 'Số ngày nghỉ phải lớn hơn hoặc bằng 0.5.',
+            'nguoi_ban_giao_id.exists' => 'Người bàn giao không tồn tại trong hệ thống.',
+        ]
+        );
 
         $user = Auth::user();
 
