@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Route; // Thêm dòng use này
 
 Route::post('/login', [AuthController::class, 'login']);
 
-// KHU VỰC ĐƯỢC BẢO VỆ BỞI SANCTUM (BẮT BUỘC CÓ TOKEN)
 Route::middleware('auth:sanctum')->group(function () {
 
     // Tuyến đường test
@@ -22,5 +21,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // API Lấy chi tiết phiếu cho Mobile App
     Route::get('/phieu-yeu-cau/{id}', [PhieuYeuCauController::class, 'show']);
+
+
+    // API Đăng xuất
+    Route::post('/logout', [AuthController::class, 'logout']);
 
 });

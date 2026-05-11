@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Mail\ThongBaoPhieuMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,9 +26,19 @@ class PhieuYeuCauNotification extends Notification implements ShouldBroadcast, S
         $this->loai = $loai;
     }
 
+    // 1. Khai báo thêm 'mail' vào kênh gửi thông báo
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', 'mail'];
+    }
+
+    // 2. hàm toMail để khởi tạo bức thư và gửi đi
+    public function toMail(object $notifiable)
+    {
+        $tieuDe = 'Thông báo từ hệ thống: '.$this->phieu->ma_phieu;
+
+        return (new ThongBaoPhieuMail($this->phieu, $tieuDe, $this->thongDiep))
+            ->to($notifiable->email);
     }
 
     public function toDatabase(object $notifiable): array
