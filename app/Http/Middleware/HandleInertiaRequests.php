@@ -26,7 +26,7 @@ class HandleInertiaRequests extends Middleware
                             'id' => $n->id,
                             'data' => $n->data,
                             'read_at' => $n->read_at,
-                            'created_at_label' => $n->created_at->diffForHumans(),
+                            'created_at' => $n->created_at->toISOString(),
                         ];
                     }),
                     'unread_count' => $request->user()->unreadNotifications()->count(),
