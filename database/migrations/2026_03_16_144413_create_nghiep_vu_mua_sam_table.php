@@ -22,7 +22,7 @@ return new class extends Migration
 
             $table->string('tieu_de');
             $table->text('ly_do')->nullable();
-            $table->decimal('tong_tien', 15, 0)->nullable(); // Nullable vì NV tạo phiếu không biết giá
+            $table->decimal('tong_tien', 15, 0)->nullable(); 
             $table->string('trang_thai')->default('nhap');
             $table->timestamps();
         });
@@ -48,7 +48,7 @@ return new class extends Migration
             $table->foreignId('nguoi_thuc_hien_id')->constrained('users');
             $table->string('hanh_dong');
             $table->text('ghi_chu')->nullable();
-            $table->timestamp('thoi_gian_duyet')->useCurrent(); // Đổi tên chuẩn theo ERD
+            $table->timestamp('thoi_gian_duyet')->useCurrent();
         });
 
         // 4. GIAO DỊCH VNPAY
