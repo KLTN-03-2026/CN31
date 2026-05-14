@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, usePage, router, useForm } from "@inertiajs/vue3";
 import { computed, ref } from "vue";
+import axios from 'axios';
 import StatusBadge from "@/Components/UI/StatusBadge.vue";
 
 const props = defineProps({
@@ -35,7 +36,7 @@ const canXacNhanNhanHang = computed(() => {
   return props.phieu.nguoi_tao === user.value.name && props.phieu.trang_thai_label === "Đã thanh toán";
 });
 
-// 2. LOGIC DRAG & DROP & FORM HANDLING
+// 2. LOGIC DRAG & DROP & FORM HANDLING (AI OCR)
 const baoGiaForm = useForm({
   nha_cung_cap_id: "",
   file_bao_gia: null,
@@ -44,17 +45,86 @@ const baoGiaForm = useForm({
   })),
 });
 
+// 🚀 HÀM TIỆN ÍCH: Format số tiền (VD: 40.000.000 đ)
+const formatCurrency = (value) => {
+    if (!value) return "0 đ";
+    return Number(value).toLocaleString("vi-VN") + " đ";
+};
+
+// 🚀 COMPUTED: Tính tổng tiền của toàn bộ báo giá theo thời gian thực
+const tongBaoGia = computed(() => {
+    return baoGiaForm.san_pham.reduce((sum, item) => {
+        return sum + ((Number(item.don_gia) || 0) * Number(item.so_luong));
+    }, 0);
+});
+
 const isDraggingBaoGia = ref(false);
+const isExtracting = ref(false);
+
+const processOcrFile = async (file) => {
+    if (!file) return;
+
+    baoGiaForm.file_bao_gia = file;
+    isExtracting.value = true;
+
+    const formData = new FormData();
+    formData.append('file_bao_gia', file);
+
+    try {
+        const response = await axios.post('/api/ai/ocr-bao-gia', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        if (response.data.success && response.data.data) {
+            const dataAi = response.data.data;
+
+            if (dataAi.nha_cung_cap_id) {
+                baoGiaForm.nha_cung_cap_id = dataAi.nha_cung_cap_id;
+            }
+
+            if (dataAi.san_pham && Array.isArray(dataAi.san_pham)) {
+                baoGiaForm.san_pham.forEach((spForm) => {
+                    const spAi = dataAi.san_pham.find(
+                        item => item.ten_san_pham && spForm.ten_san_pham &&
+                        (item.ten_san_pham.toLowerCase().includes(spForm.ten_san_pham.toLowerCase()) ||
+                         spForm.ten_san_pham.toLowerCase().includes(item.ten_san_pham.toLowerCase()))
+                    );
+
+                    if (spAi && spAi.don_gia) {
+                        const donGiaClean = String(spAi.don_gia).replace(/\D/g, '');
+                        if (donGiaClean) {
+                            spForm.don_gia = Number(donGiaClean);
+                        }
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.error("Lỗi AI OCR:", error);
+    } finally {
+        isExtracting.value = false;
+    }
+};
+
 const handleDropBaoGia = (e) => {
   e.preventDefault();
   isDraggingBaoGia.value = false;
-  if (e.dataTransfer.files?.length) baoGiaForm.file_bao_gia = e.dataTransfer.files[0];
+  if (e.dataTransfer.files?.length) {
+      processOcrFile(e.dataTransfer.files[0]);
+  }
+};
+
+const handleSelectBaoGia = (e) => {
+  if (e.target.files?.length) {
+      processOcrFile(e.target.files[0]);
+  }
 };
 
 const capNhatBaoGia = () => {
   baoGiaForm.post(route("phieu.bao_gia", props.phieu.id), { preserveScroll: true });
 };
 
+// ... LOGIC NHẬN HÀNG GIỮ NGUYÊN
 const showNhanHangModal = ref(false);
 const nhanHangForm = useForm({ file_nhan_hang: null, ghi_chu_nhan_hang: "" });
 const isDraggingNhanHang = ref(false);
@@ -71,7 +141,7 @@ const submitNhanHang = () => {
   });
 };
 
-// 3. XỬ LÝ PHÊ DUYỆT (OPTIMISTIC UI)
+// 3. XỬ LÝ PHÊ DUYỆT (OPTIMISTIC UI) GIỮ NGUYÊN
 const ghiChu = ref("");
 const isProcessingApprove = ref(false);
 const showTuChoiModal = ref(false);
@@ -180,18 +250,48 @@ const formatGhiChu = (text) => {
                 </div>
                 <div>
                   <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">File Báo giá (PDF)</label>
-                  <div @dragover.prevent="isDraggingBaoGia = true" @dragleave.prevent="isDraggingBaoGia = false" @drop="handleDropBaoGia" :class="['relative border border-dashed rounded-lg p-2 text-center transition-all flex items-center justify-center min-h-[38px]', isDraggingBaoGia ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-slate-400']">
-                    <input type="file" @change="(e) => (baoGiaForm.file_bao_gia = e.target.files[0])" class="absolute inset-0 opacity-0 cursor-pointer" accept="application/pdf" />
-                    <p class="text-xs font-medium text-slate-500 truncate px-2">{{ baoGiaForm.file_bao_gia ? baoGiaForm.file_bao_gia.name : "Kéo thả file hoặc Click để chọn" }}</p>
+                 <div @dragover.prevent="isDraggingBaoGia = true" @dragleave.prevent="isDraggingBaoGia = false" @drop="handleDropBaoGia" :class="['relative border border-dashed rounded-lg p-2 text-center transition-all flex items-center justify-center min-h-[38px]', isDraggingBaoGia ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-slate-400']">
+
+                    <input type="file" @change="handleSelectBaoGia" class="absolute inset-0 opacity-0 cursor-pointer" accept="application/pdf, image/jpeg, image/png" :disabled="isExtracting" />
+
+                    <div v-if="isExtracting" class="flex items-center gap-2 text-blue-600">
+                        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <p class="text-xs font-bold truncate">🪄 AI đang đọc tài liệu...</p>
+                    </div>
+
+                    <p v-else class="text-xs font-medium text-slate-500 truncate px-2">
+                        {{ baoGiaForm.file_bao_gia ? baoGiaForm.file_bao_gia.name : "Kéo thả file Báo giá (PDF/Ảnh) vào đây" }}
+                    </p>
+                </div>
+                </div>
+              </div>
+
+              <div class="bg-slate-50 p-3 rounded-lg border border-slate-200/60 shadow-inner">
+                <div v-for="(item, index) in baoGiaForm.san_pham" :key="item.id" class="flex flex-col gap-2 pb-3 border-b border-slate-200 last:border-0 last:pb-0 pt-3 first:pt-0">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                      <p class="text-xs font-bold text-slate-800 truncate">{{ item.ten_san_pham }}</p>
+                      <p class="text-[11px] text-slate-500 mt-0.5">Số lượng: <span class="font-bold text-slate-700">{{ item.so_luong }}</span></p>
+                    </div>
+                    <div class="w-32 shrink-0">
+                      <input v-model="item.don_gia" type="number" min="0" class="w-full rounded-md border-slate-300 text-right font-bold text-blue-600 py-1.5 text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500 placeholder:font-normal placeholder:text-slate-400" placeholder="Đơn giá" required />
+                    </div>
+                  </div>
+                  <div class="flex justify-between items-center bg-white px-3 py-1.5 rounded-md border border-slate-200/60 shadow-sm mt-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        Thành tiền
+                    </span>
+                    <span class="font-black text-emerald-600 text-[13px] tabular-nums">{{ formatCurrency(item.don_gia * item.so_luong) }}</span>
                   </div>
                 </div>
-              </div>
-              <div class="bg-slate-50 p-3 rounded-lg space-y-2 border border-slate-100">
-                <div v-for="(item, index) in baoGiaForm.san_pham" :key="item.id" class="flex items-center justify-between gap-3">
-                  <span class="text-xs font-medium text-slate-700 truncate flex-1">{{ item.ten_san_pham }} <span class="text-slate-400">(x{{ item.so_luong }})</span></span>
-                  <input v-model="item.don_gia" type="number" min="1" class="w-28 rounded-md border-slate-200 text-right font-bold text-blue-600 py-1 text-sm shadow-sm" required />
+
+                <div class="mt-3 pt-3 border-t-2 border-dashed border-slate-200 flex justify-between items-end">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tổng báo giá</span>
+                    <span class="font-black text-blue-700 text-lg tabular-nums">{{ formatCurrency(tongBaoGia) }}</span>
                 </div>
               </div>
+
               <div class="flex justify-end pt-1">
                 <button type="submit" :disabled="baoGiaForm.processing" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 disabled:opacity-50 transition-all">{{ baoGiaForm.processing ? "Đang lưu..." : "Xác nhận Báo giá" }}</button>
               </div>

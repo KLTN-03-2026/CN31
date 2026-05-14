@@ -1,9 +1,10 @@
 <script setup>
 import AdminSidebar from '@/Components/Layout/AdminSidebar.vue';
+import ProcureBotWidget from '@/Components/UI/ProcureBotWidget.vue'; // 1. Import Bot
 </script>
 
 <template>
-    <div class="flex h-screen bg-white overflow-hidden font-sans text-slate-800">
+    <div class="flex h-screen bg-white overflow-hidden font-sans text-slate-800 relative">
 
         <AdminSidebar :user="$page.props.auth.user" />
 
@@ -11,16 +12,17 @@ import AdminSidebar from '@/Components/Layout/AdminSidebar.vue';
 
             <div class="flex-1 overflow-y-auto w-full custom-scrollbar-main">
 
-
                 <div class="max-w-5xl mx-auto w-full p-4 pb-24 sm:p-8 md:py-10">
 
-                    <!-- Các trang Admin (Table, Form) sẽ render ở đây -->
                     <slot />
 
                 </div>
             </div>
 
         </main>
+
+        <ProcureBotWidget />
+
     </div>
 </template>
 

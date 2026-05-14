@@ -100,7 +100,7 @@ onMounted(() => {
 
         <!-- Row 1: KPI Cards (Giữ nguyên) -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <KpiCard title="Tổng phiếu" :value="stats?.total" colorType="slate" />
+            <KpiCard title="Tổng phiếu" :value="stats?.total" colorType="gray" />
             <KpiCard title="Cần xử lý" :value="stats?.cho_xuly" colorType="amber" />
             <KpiCard title="Đã thanh toán" :value="stats?.da_thanh_toan" colorType="blue" />
             <KpiCard title="Hoàn tất" :value="stats?.hoan_tat" colorType="emerald" />

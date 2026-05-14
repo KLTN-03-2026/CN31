@@ -100,7 +100,7 @@ const refreshPage = () => {
                     Trạng thái: Đang nâng cấp cơ sở dữ liệu
                 </div>
                 <div class="font-medium uppercase tracking-widest text-[10px]">
-                    &copy; {{ new Date().getFullYear() }} Procureflow Team
+                    &copy; {{ new Date().getFullYear() }} Procureflow 
                 </div>
             </div>
         </div>

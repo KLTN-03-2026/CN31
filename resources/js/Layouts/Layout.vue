@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import TopNav from '@/Components/Layout/TopNav.vue';
 import AppFooter from '@/Components/Layout/AppFooter.vue';
+import ProcureBotWidget from '@/Components/UI/ProcureBotWidget.vue'; // 1. Import Bot
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
@@ -16,8 +17,9 @@ const user = computed(() => page.props.auth?.user);
         <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <slot />
         </main>
-
+        <ProcureBotWidget />
         <AppFooter />
+
 
     </div>
 </template>
