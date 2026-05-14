@@ -11,6 +11,9 @@ use App\Enums\VaiTro;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Ai\AiController;
+use App\Http\Controllers\Ai\AiHistoryController;
+use App\Http\Controllers\Ai\AiOcrController;
 
 // Business (Nghiệp vụ)
 use App\Http\Controllers\NghiepVu\MuaSamController;
@@ -60,6 +63,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::post('/notifications/{id}/read', [PhieuYeuCauController::class, 'markNotificationAsRead'])->name('notifications.read');
+
+    // Route cho ProcureBot AI (Giao tiếp AJAX từ Vue)
+    Route::post('/ai/chat', [AiController::class, 'chat'])->name('ai.chat');
+    Route::get('/ai/history', [AiHistoryController::class, 'index'])->name('ai.history');
+    Route::post('/api/ai/ocr-bao-gia', [AiOcrController::class, 'extractBaoGia'])->name('ai.ocr_bao_gia');
 
     Route::controller(ProfileController::class)->prefix('profile')->name('profile.')->group(function () {
         Route::get('/change-password', 'edit')->name('edit');
